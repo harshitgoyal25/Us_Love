@@ -1,0 +1,39 @@
+backend/src/main/resources/application.properties
+# Secrets and Environments
+.env
+.env.*
+*.env
+application-local.properties
+application-dev.properties
+application-secret.properties
+
+# Keys
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Frontend / Backend (if not covered by their own .gitignores)
+node_modules/
+build/
+.dart_tool/
+.fvm/
+.gradle/
+out/
+target/

@@ -1,0 +1,76 @@
+﻿flutter : Support for 
+Android x86 targets will be 
+removed in the next stable 
+release after 3.27. See https
+://github.com/flutter/flutter
+/issues/157543 for details.
+At line:1 char:1
++ flutter build apk --debug 
+> build_error.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpeci    fied: 
+(Support fo    r And...43 
+for de    tails.:String) []  
+  , RemoteException
+    + FullyQualifiedE    
+rrorId : NativeCo    
+mmandError
+ 
+Running Gradle task 'assembleDebug'...                          
+Warning: The plugin flutter_webrtc requires Android SDK version 36 or higher.
+For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
+
+FAILURE: Build failed with 
+an exception.
+
+* What went wrong:
+A problem occurred 
+configuring project 
+':image_gallery_saver'.
+> Could not create an 
+instance of type com.android.
+build.api.variant.impl.Librar
+yVariantBuilderImpl.
+   > Namespace not 
+specified. Specify a 
+namespace in the module's 
+build file: C:\Users\harsh\Ap
+pData\Local\Pub\Cache\hosted\
+pub.dev\image_gallery_saver-2
+.0.3\android\build.gradle. 
+See https://d.android.com/r/t
+ools/upgrade-assistant/set-na
+mespace for information 
+about setting the namespace.
+
+     If you've specified the 
+package attribute in the 
+source AndroidManifest.xml, 
+you can use the AGP Upgrade 
+Assistant to migrate to the 
+namespace value in the build 
+file. Refer to https://d.andr
+oid.com/r/tools/upgrade-assis
+tant/agp-upgrade-assistant 
+for general information 
+about using the AGP Upgrade 
+Assistant.
+
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --info or --debug 
+option to get more log 
+output.
+> Run with --scan to get 
+full insights.
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 2s
+Running Gradle task 'assembleDebug'...                           2,514ms
+Gradle task assembleDebug 
+failed with exit code 1

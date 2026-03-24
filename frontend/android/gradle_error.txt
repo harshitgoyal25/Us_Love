@@ -1,0 +1,258 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources
+
+> Task :gradle:compileKotlin
+w: file:///C:/Users/harsh/Flutter/flutter/packages/flutter_tools/gradle/src/main/kotlin/DependencyVersionChecker.kt:183:39 'getter for minSdkVersion: AndroidVersion' is deprecated. Will be removed in v9.0
+
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:classes
+> Task :gradle:jar
+
+> Configure project :flutter_webrtc
+Warning: The plugin flutter_webrtc requires Android SDK version 36 or higher.
+For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
+
+> Configure project :shared_preferences_android
+Your project is configured to compile against Android SDK 35, but the following plugin(s) require to be compiled against a higher Android SDK version:
+- flutter_webrtc compiles against Android SDK 36
+Fix this issue by compiling against the highest Android SDK version (they are backward compatible).
+Add the following to C:\Users\harsh\Projects\Love\frontend\android\app\build.gradle.kts:
+
+    android {
+        compileSdk = 36
+        ...
+    }
+Your project is configured with Android NDK 26.3.11579264, but the following plugin(s) depend on a different Android NDK version:
+- audioplayers_android requires Android NDK 27.0.12077973
+- file_saver requires Android NDK 27.0.12077973
+- flutter_secure_storage requires Android NDK 27.0.12077973
+- flutter_webrtc requires Android NDK 27.0.12077973
+- image_gallery_saver_plus requires Android NDK 27.0.12077973
+- path_provider_android requires Android NDK 27.0.12077973
+- permission_handler_android requires Android NDK 27.0.12077973
+- shared_preferences_android requires Android NDK 27.0.12077973
+Fix this issue by using the highest Android NDK version (they are backward compatible).
+Add the following to C:\Users\harsh\Projects\Love\frontend\android\app\build.gradle.kts:
+
+    android {
+        ndkVersion = "27.0.12077973"
+        ...
+    }
+WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 36
+
+This Android Gradle plugin (8.7.3) was tested up to compileSdk = 35.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compileSdk = 36.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compileSdk = 36 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36
+to this project's gradle.properties.
+
+> Task :app:DebugMinSdkCheck
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:compileFlutterBuildDebug
+> Task :app:packJniLibsflutterBuildDebug
+> Task :audioplayers_android:preBuild UP-TO-DATE
+> Task :audioplayers_android:preDebugBuild UP-TO-DATE
+> Task :audioplayers_android:writeDebugAarMetadata UP-TO-DATE
+> Task :file_saver:preBuild UP-TO-DATE
+> Task :file_saver:preDebugBuild UP-TO-DATE
+> Task :file_saver:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_secure_storage:preBuild UP-TO-DATE
+> Task :flutter_secure_storage:preDebugBuild UP-TO-DATE
+> Task :flutter_secure_storage:writeDebugAarMetadata UP-TO-DATE
+> Task :flutter_webrtc:preBuild UP-TO-DATE
+> Task :flutter_webrtc:preDebugBuild UP-TO-DATE
+> Task :flutter_webrtc:writeDebugAarMetadata UP-TO-DATE
+> Task :image_gallery_saver_plus:preBuild UP-TO-DATE
+> Task :image_gallery_saver_plus:preDebugBuild UP-TO-DATE
+> Task :image_gallery_saver_plus:writeDebugAarMetadata UP-TO-DATE
+> Task :path_provider_android:preBuild UP-TO-DATE
+> Task :path_provider_android:preDebugBuild UP-TO-DATE
+> Task :path_provider_android:writeDebugAarMetadata UP-TO-DATE
+> Task :permission_handler_android:preBuild UP-TO-DATE
+> Task :permission_handler_android:preDebugBuild UP-TO-DATE
+> Task :permission_handler_android:writeDebugAarMetadata UP-TO-DATE
+> Task :shared_preferences_android:preBuild UP-TO-DATE
+> Task :shared_preferences_android:preDebugBuild UP-TO-DATE
+> Task :shared_preferences_android:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:cleanMergeDebugAssets
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :audioplayers_android:mergeDebugShaders UP-TO-DATE
+> Task :audioplayers_android:compileDebugShaders NO-SOURCE
+> Task :audioplayers_android:generateDebugAssets UP-TO-DATE
+> Task :audioplayers_android:packageDebugAssets UP-TO-DATE
+> Task :file_saver:mergeDebugShaders UP-TO-DATE
+> Task :file_saver:compileDebugShaders NO-SOURCE
+> Task :file_saver:generateDebugAssets UP-TO-DATE
+> Task :file_saver:packageDebugAssets UP-TO-DATE
+> Task :flutter_secure_storage:mergeDebugShaders UP-TO-DATE
+> Task :flutter_secure_storage:compileDebugShaders NO-SOURCE
+> Task :flutter_secure_storage:generateDebugAssets UP-TO-DATE
+> Task :flutter_secure_storage:packageDebugAssets UP-TO-DATE
+> Task :flutter_webrtc:mergeDebugShaders UP-TO-DATE
+> Task :flutter_webrtc:compileDebugShaders NO-SOURCE
+> Task :flutter_webrtc:generateDebugAssets UP-TO-DATE
+> Task :flutter_webrtc:packageDebugAssets UP-TO-DATE
+> Task :image_gallery_saver_plus:mergeDebugShaders UP-TO-DATE
+> Task :image_gallery_saver_plus:compileDebugShaders NO-SOURCE
+> Task :image_gallery_saver_plus:generateDebugAssets UP-TO-DATE
+> Task :image_gallery_saver_plus:packageDebugAssets UP-TO-DATE
+> Task :path_provider_android:mergeDebugShaders UP-TO-DATE
+> Task :path_provider_android:compileDebugShaders NO-SOURCE
+> Task :path_provider_android:generateDebugAssets UP-TO-DATE
+> Task :path_provider_android:packageDebugAssets UP-TO-DATE
+> Task :permission_handler_android:mergeDebugShaders UP-TO-DATE
+> Task :permission_handler_android:compileDebugShaders NO-SOURCE
+> Task :permission_handler_android:generateDebugAssets UP-TO-DATE
+> Task :permission_handler_android:packageDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:mergeDebugShaders UP-TO-DATE
+> Task :shared_preferences_android:compileDebugShaders NO-SOURCE
+> Task :shared_preferences_android:generateDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:packageDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:copyFlutterAssetsDebug
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :audioplayers_android:generateDebugResValues UP-TO-DATE
+> Task :audioplayers_android:generateDebugResources UP-TO-DATE
+> Task :audioplayers_android:packageDebugResources UP-TO-DATE
+> Task :file_saver:generateDebugResValues UP-TO-DATE
+> Task :file_saver:generateDebugResources UP-TO-DATE
+> Task :file_saver:packageDebugResources UP-TO-DATE
+> Task :flutter_secure_storage:generateDebugResValues UP-TO-DATE
+> Task :flutter_secure_storage:generateDebugResources UP-TO-DATE
+> Task :flutter_secure_storage:packageDebugResources UP-TO-DATE
+> Task :flutter_webrtc:generateDebugResValues UP-TO-DATE
+> Task :flutter_webrtc:generateDebugResources UP-TO-DATE
+> Task :flutter_webrtc:packageDebugResources UP-TO-DATE
+> Task :image_gallery_saver_plus:generateDebugResValues UP-TO-DATE
+> Task :image_gallery_saver_plus:generateDebugResources UP-TO-DATE
+> Task :image_gallery_saver_plus:packageDebugResources UP-TO-DATE
+> Task :path_provider_android:generateDebugResValues UP-TO-DATE
+> Task :path_provider_android:generateDebugResources UP-TO-DATE
+> Task :path_provider_android:packageDebugResources UP-TO-DATE
+> Task :permission_handler_android:generateDebugResValues UP-TO-DATE
+> Task :permission_handler_android:generateDebugResources UP-TO-DATE
+> Task :permission_handler_android:packageDebugResources UP-TO-DATE
+> Task :shared_preferences_android:generateDebugResValues UP-TO-DATE
+> Task :shared_preferences_android:generateDebugResources UP-TO-DATE
+> Task :shared_preferences_android:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :audioplayers_android:extractDeepLinksDebug UP-TO-DATE
+> Task :audioplayers_android:processDebugManifest UP-TO-DATE
+> Task :file_saver:extractDeepLinksDebug UP-TO-DATE
+> Task :file_saver:processDebugManifest UP-TO-DATE
+> Task :flutter_secure_storage:extractDeepLinksDebug UP-TO-DATE
+> Task :flutter_secure_storage:processDebugManifest UP-TO-DATE
+> Task :flutter_webrtc:extractDeepLinksDebug UP-TO-DATE
+> Task :flutter_webrtc:processDebugManifest UP-TO-DATE
+> Task :image_gallery_saver_plus:extractDeepLinksDebug UP-TO-DATE
+> Task :image_gallery_saver_plus:processDebugManifest UP-TO-DATE
+> Task :path_provider_android:extractDeepLinksDebug UP-TO-DATE
+> Task :path_provider_android:processDebugManifest UP-TO-DATE
+> Task :permission_handler_android:extractDeepLinksDebug UP-TO-DATE
+> Task :permission_handler_android:processDebugManifest UP-TO-DATE
+> Task :shared_preferences_android:extractDeepLinksDebug UP-TO-DATE
+> Task :shared_preferences_android:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :audioplayers_android:compileDebugLibraryResources UP-TO-DATE
+> Task :audioplayers_android:parseDebugLocalResources UP-TO-DATE
+> Task :audioplayers_android:generateDebugRFile UP-TO-DATE
+> Task :file_saver:compileDebugLibraryResources UP-TO-DATE
+> Task :file_saver:parseDebugLocalResources UP-TO-DATE
+> Task :file_saver:generateDebugRFile UP-TO-DATE
+> Task :flutter_secure_storage:compileDebugLibraryResources UP-TO-DATE
+> Task :flutter_secure_storage:parseDebugLocalResources UP-TO-DATE
+> Task :flutter_secure_storage:generateDebugRFile UP-TO-DATE
+> Task :flutter_webrtc:compileDebugLibraryResources UP-TO-DATE
+> Task :flutter_webrtc:parseDebugLocalResources UP-TO-DATE
+> Task :flutter_webrtc:generateDebugRFile UP-TO-DATE
+> Task :image_gallery_saver_plus:compileDebugLibraryResources UP-TO-DATE
+> Task :image_gallery_saver_plus:parseDebugLocalResources UP-TO-DATE
+> Task :image_gallery_saver_plus:generateDebugRFile UP-TO-DATE
+> Task :path_provider_android:compileDebugLibraryResources UP-TO-DATE
+> Task :path_provider_android:parseDebugLocalResources UP-TO-DATE
+> Task :path_provider_android:generateDebugRFile UP-TO-DATE
+> Task :permission_handler_android:compileDebugLibraryResources UP-TO-DATE
+> Task :permission_handler_android:parseDebugLocalResources UP-TO-DATE
+> Task :permission_handler_android:generateDebugRFile UP-TO-DATE
+> Task :shared_preferences_android:compileDebugLibraryResources UP-TO-DATE
+> Task :shared_preferences_android:parseDebugLocalResources UP-TO-DATE
+> Task :shared_preferences_android:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :audioplayers_android:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :audioplayers_android:javaPreCompileDebug UP-TO-DATE
+> Task :file_saver:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :file_saver:javaPreCompileDebug UP-TO-DATE
+> Task :flutter_secure_storage:generateDebugBuildConfig UP-TO-DATE
+> Task :flutter_secure_storage:javaPreCompileDebug UP-TO-DATE
+> Task :flutter_secure_storage:compileDebugJavaWithJavac
+> Task :flutter_webrtc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :flutter_secure_storage:bundleLibCompileToJarDebug
+> Task :flutter_webrtc:javaPreCompileDebug UP-TO-DATE
+> Task :image_gallery_saver_plus:checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :file_saver:compileDebugKotlin
+w: file:///C:/Users/harsh/AppData/Local/Pub/Cache/hosted/pub.dev/file_saver-0.2.14/android/src/main/kotlin/com/incrediblezayed/file_saver/FileUtils.kt:204:20 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'kotlin.String?'.
+
+> Task :file_saver:compileDebugJavaWithJavac NO-SOURCE
+> Task :file_saver:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :image_gallery_saver_plus:javaPreCompileDebug UP-TO-DATE
+> Task :path_provider_android:javaPreCompileDebug UP-TO-DATE
+
+> Task :image_gallery_saver_plus:compileDebugKotlin FAILED
+e: file:///C:/Users/harsh/AppData/Local/Pub/Cache/hosted/pub.dev/image_gallery_saver_plus-3.0.5/android/src/main/kotlin/com/example/image_gallery_saver_plus/ImageGallerySaverPlusPlugin.kt:21:48 Unresolved reference 'Registrar'.
+
+> Task :flutter_webrtc:compileDebugKotlin
+> Task :path_provider_android:compileDebugJavaWithJavac
+
+> Task :audioplayers_android:compileDebugKotlin
+w: file:///C:/Users/harsh/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_android-5.2.1/android/src/main/kotlin/xyz/luan/audioplayers/AudioplayersPlugin.kt:72:30 'var isSpeakerphoneOn: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/harsh/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_android-5.2.1/android/src/main/kotlin/xyz/luan/audioplayers/player/WrappedPlayer.kt:172:22 'var isSpeakerphoneOn: Boolean' is deprecated. Deprecated in Java.
+
+[Incubating] Problems report is available at: file:///C:/Users/harsh/Projects/Love/frontend/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':image_gallery_saver_plus:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 15s
+127 actionable tasks: 16 executed, 111 up-to-date
