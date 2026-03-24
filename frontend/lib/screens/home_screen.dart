@@ -6,6 +6,7 @@ import '../core/auth_provider.dart';
 import '../core/api_client.dart';
 import '../models/room_model.dart';
 import '../core/app_theme.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? initialCode;
@@ -114,6 +115,18 @@ class _HomeScreenState extends State<HomeScreen>
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: AppTheme.rose),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+      drawer: const AppDrawer(),
       body: FloatingHeartsBackground(
         child: FadeTransition(
           opacity: _fade,
@@ -216,23 +229,6 @@ class _HomeScreenState extends State<HomeScreen>
                             outlined: true,
                           ),
                         ],
-                      ),
-                    ),
-
-                    // ── Logout link ──
-                    const SizedBox(height: 28),
-                    GestureDetector(
-                      onTap: () async {
-                        await auth.logout();
-                        if (context.mounted) context.go('/login');
-                      },
-                      child: Text(
-                        'Sign out',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: AppTheme.textSecondary.withOpacity(0.5),
-                          fontWeight: FontWeight.w400,
-                        ),
                       ),
                     ),
                   ],

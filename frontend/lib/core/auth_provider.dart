@@ -7,6 +7,7 @@ class AuthProvider extends ChangeNotifier {
   String? token;
   String? userId;
   String? name;
+  String? email;
   bool isLoading = false;
   String? error;
 
@@ -19,15 +20,16 @@ class AuthProvider extends ChangeNotifier {
       token = data['token'];
       name = data['name'];
       userId = data['userId'];
+      this.email = data['email'] ?? email; // Update the class field
       await _api.saveToken(token!);
       await _api.saveUserId(userId!);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('name', name!);
+      await prefs.setString('email', this.email!);
       isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      error = 'Registration failed. Try again.';
       isLoading = false;
       notifyListeners();
       return false;
@@ -43,17 +45,16 @@ class AuthProvider extends ChangeNotifier {
       token = data['token'];
       name = data['name'];
       userId = data['userId'];
-      print('userId saved: $userId');
+      this.email = data['email'] ?? email;
       await _api.saveToken(token!);
       await _api.saveUserId(userId!);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('name', name!);
+      await prefs.setString('email', this.email!);
       isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      print('LOGIN ERROR: $e');
-      error = e.toString();
       isLoading = false;
       notifyListeners();
       return false;
@@ -65,6 +66,7 @@ class AuthProvider extends ChangeNotifier {
     token = prefs.getString('token');
     userId = prefs.getString('userId');
     name = prefs.getString('name');
+    email = prefs.getString('email');
     notifyListeners();
   }
 
@@ -73,9 +75,11 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove('token');
     await prefs.remove('userId');
     await prefs.remove('name');
+    await prefs.remove('email');
     token = null;
     userId = null;
     name = null;
+    email = null;
     notifyListeners();
   }
 

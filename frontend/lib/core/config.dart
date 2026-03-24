@@ -17,10 +17,7 @@ const String _serverHost = String.fromEnvironment(
   defaultValue: 'localhost',
 );
 
-const bool _useHttps = bool.fromEnvironment(
-  'USE_HTTPS',
-  defaultValue: false,
-);
+const bool _useHttps = bool.fromEnvironment('USE_HTTPS', defaultValue: false);
 
 class AppConfig {
   AppConfig._();

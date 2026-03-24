@@ -12,13 +12,23 @@ import 'screens/games/dots_and_boxes_screen.dart';
 import 'screens/games/co_draw_screen.dart';
 import 'screens/games/photobooth_screen.dart';
 import 'core/app_theme.dart';
+import 'core/error_service.dart';
+import 'widgets/premium_error_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final auth = AuthProvider();
   await auth.loadFromStorage();
 
-  runApp(ChangeNotifierProvider.value(value: auth, child: const MyApp()));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: auth),
+        ChangeNotifierProvider.value(value: ErrorService.instance),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 final GoRouter _router = GoRouter(
@@ -99,6 +109,23 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: _router,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            if (child != null) child,
+            Consumer<ErrorService>(
+              builder: (context, errorService, _) {
+                final error = errorService.currentError;
+                if (error == null) return const SizedBox.shrink();
+                return PremiumErrorDialog(
+                  error: error,
+                  onDismiss: () => errorService.clearError(),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -5,6 +5,7 @@ import com.couples.backend.model.GameSession;
 import com.couples.backend.repository.GameSessionRepository;
 import com.couples.backend.service.RoomService;
 import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import java.time.LocalDateTime;
@@ -26,13 +27,26 @@ public class GameSocketController {
     }
 
     @MessageMapping("/room/{roomId}")
-    public void handleEvent(@DestinationVariable String roomId, GameEvent event) {
+    public void handleEvent(@DestinationVariable String roomId, GameEvent event,
+                            SimpMessageHeaderAccessor headerAccessor) {
+        String sessionId = headerAccessor.getSessionId();
+        Map<String, Object> payload = event.getPayload();
+
+        if (payload != null && payload.containsKey("userId")) {
+            roomService.trackSession(sessionId, roomId, (String) payload.get("userId"));
+        }
+        
         switch (event.getType()) {
 
-            case "PARTNER_JOINED":
+            case "PARTNER_JOINED": {
                 messaging.convertAndSend("/topic/room/" + roomId,
                     Map.of("type", "PARTNER_JOINED"));
                 break;
+            }
+
+            case "LOBBY_SYNC": {
+                break;
+            }
 
             case "GAME_SELECTED":
                 roomService.setGame(roomId, event.getGame());
@@ -40,19 +54,42 @@ public class GameSocketController {
                     Map.of("type", "GAME_START", "game", event.getGame()));
                 break;
 
-            case "GAME_ACTION":
+            case "GAME_ACTION": {
+                if (payload != null && "PARTNER_LEFT".equals(payload.get("action"))) {
+                    String senderId = (String) payload.get("userId");
+                    if (senderId != null) {
+                        roomService.handleUserLeft(roomId, senderId);
+                        
+                        // Broadcast explicit PARTNER_LEFT to the remaining player
+                        messaging.convertAndSend("/topic/room/" + roomId,
+                            Map.of("type", "PARTNER_LEFT"));
+                        
+                        // Broadcast updated room state
+                        Map<String, String> updatedRoom = roomService.getRoom(roomId);
+                        if (updatedRoom != null) {
+                            String currentHostId = updatedRoom.get("hostId");
+                            messaging.convertAndSend("/topic/room/" + roomId,
+                                Map.of(
+                                    "type", "ROOM_UPDATE",
+                                    "hostId", currentHostId,
+                                    "code", updatedRoom.get("code")
+                                ));
+                        }
+                    }
+                }
+                // Also broadcast the full state update for game compatibility
                 messaging.convertAndSend("/topic/room/" + roomId,
                     Map.of("type", "GAME_STATE_UPDATE", "payload", event.getPayload()));
                 break;
+            }
 
-            case "GAME_END":
+            case "GAME_END": {
                 messaging.convertAndSend("/topic/room/" + roomId,
                     Map.of("type", "GAME_END", "payload", event.getPayload()));
 
                 // Persist game session to Supabase
                 Map<String, String> room = roomService.getRoom(roomId);
                 if (room != null && room.containsKey("coupleId")) {
-                    Map<String, Object> payload = event.getPayload();
                     GameSession session = new GameSession();
                     session.setCoupleId(UUID.fromString(room.get("coupleId")));
                     session.setGameType(room.get("game"));
@@ -68,6 +105,7 @@ public class GameSocketController {
                     gameSessionRepository.save(session);
                 }
                 break;
+            }
         }
     }
 }

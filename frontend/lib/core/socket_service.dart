@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'config.dart';
+import 'app_error.dart';
+import 'error_service.dart';
 
 class SocketService {
   StompClient? _client;
@@ -32,9 +34,18 @@ class SocketService {
             },
           );
         },
-        onDisconnect: (frame) => print('Disconnected'),
-        onStompError: (frame) => print('STOMP error: ${frame.body}'),
-        onWebSocketError: (error) => print('WS error: $error'),
+        onDisconnect: (frame) {
+          print('Disconnected');
+          // Optional: Show error if disconnect was unexpected
+        },
+        onStompError: (frame) {
+          print('STOMP error: ${frame.body}');
+          ErrorService.instance.showError(AppError.server('Game synchronization error.'));
+        },
+        onWebSocketError: (error) {
+          print('WS error: $error');
+          ErrorService.instance.showError(AppError.socket());
+        },
       ),
     );
     _client!.activate();

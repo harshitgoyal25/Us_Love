@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/socket_service.dart';
 import '../models/room_model.dart';
 import '../core/app_theme.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/auth_provider.dart';
+import '../widgets/app_drawer.dart';
 
 class LobbyScreen extends StatefulWidget {
   final RoomModel room;
@@ -22,10 +22,12 @@ class _LobbyScreenState extends State<LobbyScreen>
     with TickerProviderStateMixin {
   final SocketService _socket = SocketService();
   bool partnerConnected = false;
-  late AnimationController _pulseCtrl;
-  late AnimationController _cardEnterCtrl;
-  late Animation<double> _cardFade;
-  late Animation<Offset> _cardSlide;
+  late final AnimationController _pulseCtrl;
+  late final AnimationController _cardEnterCtrl;
+  late final Animation<double> _cardFade;
+  late final Animation<Offset> _cardSlide;
+  String? _currentRole;
+  String? _myUserId;
 
   final List<Map<String, dynamic>> games = [
     {'id': 'custom_quiz', 'title': 'How Well Do You Know Me?', 'emoji': '🎯', 'description': 'Test your knowledge of each other'},
@@ -37,6 +39,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   @override
   void initState() {
     super.initState();
+    _currentRole = widget.room.role;
     _connectSocket();
     _pulseCtrl = AnimationController(
       vsync: this,
@@ -56,22 +59,29 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   void _connectSocket() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
+    final auth = context.read<AuthProvider>();
+    _myUserId = auth.userId;
+    final token = auth.token ?? '';
 
     _socket.connect(
       roomId: widget.room.roomId,
       token: token,
       onConnected: () {
-        if (!widget.room.isHost) {
-          _socket.sendEvent(widget.room.roomId, {'type': 'PARTNER_JOINED'});
+        if (_currentRole != 'HOST') {
+          _socket.sendEvent(widget.room.roomId, {
+            'type': 'PARTNER_JOINED',
+            'payload': {'userId': _myUserId}
+          });
           if (mounted) {
             setState(() => partnerConnected = true);
           }
         } else {
           _socket.sendEvent(widget.room.roomId, {
-            'type': 'GAME_ACTION',
-            'payload': {'action': 'LOBBY_SYNC'}
+            'type': 'LOBBY_SYNC',
+            'payload': {
+              'action': 'LOBBY_SYNC',
+              'userId': _myUserId,
+            }
           });
         }
       },
@@ -81,6 +91,19 @@ class _LobbyScreenState extends State<LobbyScreen>
           setState(() => partnerConnected = true);
         } else if (type == 'PARTNER_LEFT') {
           setState(() => partnerConnected = false);
+        } else if (type == 'ROOM_UPDATE') {
+          final hostId = event['hostId']?.toString();
+          final myId = _myUserId?.toString();
+          
+          if (hostId != null && myId != null && 
+              hostId.trim().toLowerCase() == myId.trim().toLowerCase()) {
+            if (mounted) {
+              setState(() {
+                _currentRole = 'HOST';
+                partnerConnected = false;
+              });
+            }
+          }
         } else if (type == 'GAME_START') {
           final game = event['game'];
           if (context.mounted) {
@@ -90,7 +113,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           final payload = event['payload'];
           if (payload != null) {
             if (payload['action'] == 'LOBBY_SYNC') {
-              if (!widget.room.isHost) {
+              if (_currentRole != 'HOST') {
                 _socket.sendEvent(widget.room.roomId, {'type': 'PARTNER_JOINED'});
               }
             } else if (payload['action'] == 'PARTNER_LEFT') {
@@ -120,6 +143,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppDrawer(),
       body: FloatingHeartsBackground(
         child: Column(
           children: [
@@ -128,6 +152,8 @@ class _LobbyScreenState extends State<LobbyScreen>
               room: widget.room,
               partnerConnected: partnerConnected,
               pulseCtrl: _pulseCtrl,
+              myUserId: _myUserId,
+              socket: _socket,
             ),
 
             // ── Main Content ──
@@ -136,7 +162,7 @@ class _LobbyScreenState extends State<LobbyScreen>
                 opacity: _cardFade,
                 child: SlideTransition(
                   position: _cardSlide,
-                  child: widget.room.isHost
+                  child: _currentRole == 'HOST'
                       ? _buildHostView()
                       : _buildGuestView(),
                 ),
@@ -214,11 +240,15 @@ class _FrostedAppBar extends StatelessWidget {
   final RoomModel room;
   final bool partnerConnected;
   final AnimationController pulseCtrl;
-
+  final String? myUserId;
+  final SocketService socket;
+  
   const _FrostedAppBar({
     required this.room,
     required this.partnerConnected,
     required this.pulseCtrl,
+    required this.myUserId,
+    required this.socket,
   });
 
   @override
@@ -245,11 +275,20 @@ class _FrostedAppBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left: Room code
+              // Left: Menu + Room code
               Row(
                 children: [
+                  Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.menu_rounded, color: AppTheme.rose),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   Text(
-                    'Code',
+                    'Room Code:',
                     style: AppTheme.body(12,
                         color: AppTheme.textSecondary.withOpacity(0.6)),
                   ),
@@ -359,21 +398,19 @@ class _FrostedAppBar extends StatelessWidget {
                             ],
                           ),
                   ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.logout_rounded,
-                        color: AppTheme.rose, size: 20),
-                    tooltip: 'Logout',
-                    onPressed: () {
+                  const SizedBox(width: 12),
+                  // Glass styled Leave Room Button
+                  GestureDetector(
+                    onTap: () {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
                           backgroundColor: AppTheme.bg3,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20)),
-                          title: Text('Leave Lobby?', style: AppTheme.display(20)),
+                          title: Text('Leave Room?', style: AppTheme.display(20)),
                           content: Text(
-                            'Are you sure you want to log out and leave the lobby?',
+                            'Are you sure you want to leave this room?',
                             style: AppTheme.body(14),
                           ),
                           actions: [
@@ -383,20 +420,21 @@ class _FrostedAppBar extends StatelessWidget {
                                   style: AppTheme.body(14)),
                             ),
                             TextButton(
-                              onPressed: () async {
+                              onPressed: () {
                                 Navigator.pop(ctx);
-                                final socket = SocketService();
                                 socket.sendEvent(room.roomId, {
                                   'type': 'GAME_ACTION',
-                                  'payload': {'action': 'PARTNER_LEFT'}
+                                  'payload': {
+                                    'action': 'PARTNER_LEFT',
+                                    'userId': myUserId,
+                                  }
                                 });
-                                await context.read<AuthProvider>().logout();
                                 if (context.mounted) {
-                                  context.go('/login');
+                                  context.go('/home');
                                 }
                               },
                               child: Text(
-                                'Leave & Logout',
+                                'Leave',
                                 style: AppTheme.body(14,
                                     color: AppTheme.rose),
                               ),
@@ -405,6 +443,30 @@ class _FrostedAppBar extends StatelessWidget {
                         ),
                       );
                     },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.rose.withOpacity(0.12),
+                            AppTheme.bg1.withOpacity(0.2),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(
+                          color: AppTheme.rose.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'Leave Room',
+                        style: AppTheme.label(12).copyWith(
+                          color: AppTheme.rose,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

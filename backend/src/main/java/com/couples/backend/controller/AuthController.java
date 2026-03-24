@@ -5,6 +5,7 @@ import com.couples.backend.dto.RegisterRequest;
 import com.couples.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")

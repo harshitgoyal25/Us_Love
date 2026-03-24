@@ -360,7 +360,7 @@ class BrandHeader extends StatelessWidget {
             colors: [AppTheme.rose, AppTheme.roseDark],
           ).createShader(bounds),
           child: Text(
-            'us.love',
+            'US.LOVE',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 34,
               fontWeight: FontWeight.w700,

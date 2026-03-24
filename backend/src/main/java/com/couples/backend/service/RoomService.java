@@ -14,6 +14,7 @@ public class RoomService {
     private final CoupleRepository coupleRepository;
     private final Map<String, Map<String, String>> rooms = new ConcurrentHashMap<>();
     private final Map<String, String> codeToRoom = new ConcurrentHashMap<>();
+    private final Map<String, String[]> sessionTracker = new ConcurrentHashMap<>(); // sessionId -> [roomId, userId]
 
     public RoomService(CoupleRepository coupleRepository) {
         this.coupleRepository = coupleRepository;
@@ -57,6 +58,42 @@ public class RoomService {
 
     public Map<String, String> getRoom(String roomId) {
         return rooms.get(roomId);
+    }
+
+    public void handleUserLeft(String roomId, String userId) {
+        Map<String, String> room = rooms.get(roomId);
+        if (room == null) {
+            return;
+        }
+
+        String hostId = room.get("hostId");
+        String guestId = room.get("guestId");
+
+        if (userId != null && hostId != null && userId.trim().equalsIgnoreCase(hostId.trim())) {
+            // Host left, promote guest to host if present
+            if (guestId != null) {
+                room.put("hostId", guestId);
+                room.remove("guestId");
+            } else {
+                rooms.remove(roomId);
+                codeToRoom.remove(room.get("code"));
+                return;
+            }
+        } else if (userId != null && guestId != null && userId.trim().equalsIgnoreCase(guestId.trim())) {
+            room.remove("guestId");
+        }
+
+        // Reset state so a new partner can join and a new session can start
+        room.put("game", "");
+        room.remove("coupleId");
+    }
+
+    public void trackSession(String sessionId, String roomId, String userId) {
+        sessionTracker.put(sessionId, new String[]{roomId, userId});
+    }
+
+    public String[] untrackSession(String sessionId) {
+        return sessionTracker.remove(sessionId);
     }
 
     private String generateCode() {
