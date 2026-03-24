@@ -18,7 +18,7 @@ RUN flutter --version
 COPY . .
 
 # Build Args for mapping to backend
-ARG BACKEND_HOST
+ARG BACKEND_HOST=uslove-backend.onrender.com
 ARG USE_HTTPS=true
 
 # Get dependencies and build web
