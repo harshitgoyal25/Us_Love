@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies for Flutter
 RUN apt-get update && apt-get install -y \
-    curl git unzip xz-utils libglu1-mesa \
+    curl git unzip xz-utils libglu1-mesa ca-certificates tar \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Flutter
@@ -22,6 +22,8 @@ ARG BACKEND_HOST=uslove-backend.onrender.com
 ARG USE_HTTPS=true
 
 # Get dependencies and build web
+RUN flutter config --no-analytics
+RUN flutter precache --web
 RUN flutter pub get
 RUN flutter build web \
     --dart-define=SERVER_HOST=${BACKEND_HOST} \
