@@ -80,8 +80,18 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
     try {
       _localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
       _localRenderer.srcObject = _localStream;
-      setState(() {});
+      if (mounted) setState(() {});
       _createPeerConnection();
+      
+      // Tell the other user that we are ready to receive or create offers
+      _socket.sendEvent(widget.room.roomId, {
+        'type': 'GAME_ACTION',
+        'payload': {
+          'action': 'WEBRTC_READY',
+          'userId': _myId,
+        }
+      });
+      
     } catch (e) {
       debugPrint("Error opening camera: $e");
     }
@@ -117,9 +127,11 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
     _peerConnection!.onAddStream = (MediaStream stream) {
       _remoteStream = stream;
       _remoteRenderer.srcObject = _remoteStream;
-      setState(() {
-        _inCalling = true;
-      });
+      if (mounted) {
+        setState(() {
+          _inCalling = true;
+        });
+      }
     };
 
     _localStream?.getTracks().forEach((track) {
@@ -132,31 +144,39 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
   }
 
   Future<void> _createOffer() async {
-    RTCSessionDescription offer = await _peerConnection!.createOffer({});
-    await _peerConnection!.setLocalDescription(offer);
-    
-    _socket.sendEvent(widget.room.roomId, {
-      'type': 'GAME_ACTION',
-      'payload': {
-        'action': 'WEBRTC_OFFER',
-        'userId': _myId,
-        'sdp': offer.toMap(),
-      }
-    });
+    if (_peerConnection == null) return;
+    try {
+      RTCSessionDescription offer = await _peerConnection!.createOffer({});
+      await _peerConnection!.setLocalDescription(offer);
+      
+      _socket.sendEvent(widget.room.roomId, {
+        'type': 'GAME_ACTION',
+        'payload': {
+          'action': 'WEBRTC_OFFER',
+          'userId': _myId,
+          'sdp': offer.toMap(),
+        }
+      });
+    // ignore: empty_catches
+    } catch (e) {}
   }
 
   Future<void> _createAnswer() async {
-    RTCSessionDescription answer = await _peerConnection!.createAnswer({});
-    await _peerConnection!.setLocalDescription(answer);
-    
-    _socket.sendEvent(widget.room.roomId, {
-      'type': 'GAME_ACTION',
-      'payload': {
-        'action': 'WEBRTC_ANSWER',
-        'userId': _myId,
-        'sdp': answer.toMap(),
-      }
-    });
+    if (_peerConnection == null) return;
+    try {
+      RTCSessionDescription answer = await _peerConnection!.createAnswer({});
+      await _peerConnection!.setLocalDescription(answer);
+      
+      _socket.sendEvent(widget.room.roomId, {
+        'type': 'GAME_ACTION',
+        'payload': {
+          'action': 'WEBRTC_ANSWER',
+          'userId': _myId,
+          'sdp': answer.toMap(),
+        }
+      });
+    // ignore: empty_catches
+    } catch (e) {}
   }
 
   void _onSignalingMessage(dynamic event) async {
@@ -169,7 +189,12 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
       
       if (senderId == _myId && senderId != null) return; // ignore self
       
-      if (action == 'WEBRTC_OFFER') {
+      if (action == 'WEBRTC_READY') {
+         // If a user becomes ready and we are the host, recreate/send the offer
+         if (widget.room.isHost) {
+            _createOffer();
+         }
+      } else if (action == 'WEBRTC_OFFER') {
         final sdpMap = payload['sdp'];
         await _peerConnection?.setRemoteDescription(
             RTCSessionDescription(sdpMap['sdp'], sdpMap['type']));
@@ -185,9 +210,11 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
       } else if (action == 'TAKE_PHOTO') {
         _snapLocalPhoto();
       } else if (action == 'UNDO_PHOTO') {
-        setState(() {
-          if (_capturedPhotos.isNotEmpty) _capturedPhotos.removeLast();
-        });
+        if (mounted) {
+          setState(() {
+            if (_capturedPhotos.isNotEmpty) _capturedPhotos.removeLast();
+          });
+        }
       }
     } else if (event['type'] == 'BACK_TO_LOBBY') {
         if (mounted) context.go('/lobby', extra: widget.room);
@@ -209,32 +236,37 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
       'type': 'GAME_ACTION',
       'payload': {'action': 'UNDO_PHOTO', 'userId': _myId}
     });
-    setState(() {
-      _capturedPhotos.removeLast();
-    });
+    if (mounted) {
+      setState(() {
+        _capturedPhotos.removeLast();
+      });
+    }
   }
 
   Future<void> _snapLocalPhoto() async {
     // Shutter sound
     try {
       await _audioPlayer.play(AssetSource('audio/shutter.mp3'));
+    // ignore: empty_catches
     } catch (_) {}
 
     // Flash effect
-    setState(() => _isFlashing = true);
+    if (mounted) setState(() => _isFlashing = true);
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) setState(() => _isFlashing = false);
     });
 
     // Capture render boundary
-    await Future.delayed(const Duration(milliseconds: 50)); // let flash resolve if we wanted, or capture instantly 
+    await Future.delayed(const Duration(milliseconds: 50)); 
     try {
       if (_cameraRowKey.currentContext == null) return;
       final boundary = _cameraRowKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2.0);
-      setState(() {
-        _capturedPhotos.add(image);
-      });
+      if (mounted) {
+        setState(() {
+          _capturedPhotos.add(image);
+        });
+      }
     } catch (e) {
       debugPrint("Screenshot err: $e");
     }
@@ -251,24 +283,31 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
     try {
       final int stripWidth = _capturedPhotos[0].width;
       final int photoHeight = _capturedPhotos[0].height;
-      final int stripHeight = photoHeight * _capturedPhotos.length;
+      
+      // Add a border size for styling
+      const int borderSize = 20; 
+      
+      final int finalWidth = stripWidth + (borderSize * 2);
+      final int finalHeight = (photoHeight * _capturedPhotos.length) + (borderSize * (_capturedPhotos.length + 1));
       
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
       
       final paint = Paint()..color = AppTheme.bg1;
-      canvas.drawRect(Rect.fromLTWH(0, 0, stripWidth.toDouble(), stripHeight.toDouble()), paint);
+      canvas.drawRect(Rect.fromLTWH(0, 0, finalWidth.toDouble(), finalHeight.toDouble()), paint);
       
+      int currentY = borderSize;
       for (int i = 0; i < _capturedPhotos.length; i++) {
-        canvas.drawImage(_capturedPhotos[i], Offset(0, (photoHeight * i).toDouble()), Paint());
+        canvas.drawImage(_capturedPhotos[i], Offset(borderSize.toDouble(), currentY.toDouble()), Paint());
+        currentY += photoHeight + borderSize;
       }
       
       final finalPicture = recorder.endRecording();
-      final finalImage = await finalPicture.toImage(stripWidth, stripHeight);
+      final finalImage = await finalPicture.toImage(finalWidth, finalHeight);
       final byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
 
-      final fileName = "Photobooth_${DateTime.now().millisecondsSinceEpoch}";
+      final fileName = "Us_Love_Photobooth_${DateTime.now().millisecondsSinceEpoch}";
       final String resultPath = await FileSaver.instance.saveFile(
         name: fileName,
         bytes: buffer,
@@ -293,9 +332,25 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
     }
   }
 
+  void _backToLobby() {
+    _socket.sendEvent(widget.room.roomId, {
+       'type': 'BACK_TO_LOBBY',
+       'payload': {}
+    });
+    context.go('/lobby', extra: widget.room);
+  }
+
   @override
   void dispose() {
     _socket.disconnect();
+    
+    // Explicitly turn off hardware camera/mic tracks!
+    if (_localStream != null) {
+      for (var track in _localStream!.getTracks()) {
+        track.stop();
+      }
+    }
+
     _localStream?.dispose();
     _remoteStream?.dispose();
     _localRenderer.dispose();
@@ -307,135 +362,214 @@ class _PhotoboothScreenState extends State<PhotoboothScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
-      onKeyEvent: (event) {
-        if (event is KeyDownEvent && (event.logicalKey == LogicalKeyboardKey.space || event.logicalKey == LogicalKeyboardKey.enter)) {
-          if (widget.room.isHost && _capturedPhotos.length < 4) {
-            _triggerSnap();
-          }
-        }
-      },
-      child: Scaffold(
+    
+    // 1. Result/Preview State (When 4 photos are captured)
+    if (_capturedPhotos.length == 4) {
+      return Scaffold(
         backgroundColor: AppTheme.bg1,
         appBar: SharedGameAppBar(
           room: widget.room,
           socket: _socket,
-          title: 'Photobooth',
+          title: 'Your Photostrip!',
         ),
         body: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Photos: ${_capturedPhotos.length} / 4',
-                      style: AppTheme.display(24),
-                    ),
+              Expanded(
+                 child: Center(
+                   child: SingleChildScrollView(
+                     padding: const EdgeInsets.symmetric(vertical: 24),
+                     child: Container(
+                       width: 240,
+                       decoration: BoxDecoration(
+                         color: AppTheme.bg2,
+                         border: Border.all(color: AppTheme.rose, width: 4),
+                         borderRadius: BorderRadius.circular(12),
+                       ),
+                       padding: const EdgeInsets.all(12),
+                       child: Column(
+                         mainAxisSize: MainAxisSize.min,
+                         children: List.generate(4, (i) => Padding(
+                           padding: EdgeInsets.only(bottom: i < 3 ? 12 : 0),
+                           child: ClipRRect(
+                             borderRadius: BorderRadius.circular(8),
+                             child: RawImage(image: _capturedPhotos[i], fit: BoxFit.cover, width: double.infinity),
+                           ),
+                         )),
+                       )
+                     )
+                   )
+                 )
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                     AppTheme.roseButton(label: 'Download Strip', onTap: _savePhotostrip),
+                     if (widget.room.isHost)
+                       AppTheme.roseButton(label: 'Back to Lobby', outlined: true, onTap: _backToLobby),
+                  ],
+                ),
+              ),
+              if (!widget.room.isHost)
+                 Padding(
+                   padding: const EdgeInsets.only(bottom: 24.0),
+                   child: Text("Waiting for host to return to the Lobby...", style: AppTheme.body(14, color: AppTheme.textSecondary)),
+                 )
+            ]
+          )
+        )
+      );
+    }
+
+    // 2. Live Capture State
+    return Scaffold(
+      backgroundColor: AppTheme.bg1,
+      appBar: SharedGameAppBar(
+        room: widget.room,
+        socket: _socket,
+        title: 'Photobooth',
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Photos: ${_capturedPhotos.length} / 4',
+                    style: AppTheme.display(24),
                   ),
-                  Expanded(
-                    child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9, // Wide split screen
-                        child: RepaintBoundary(
-                          key: _cameraRowKey,
-                          child: Container(
-                            decoration: AppTheme.velvetCard().copyWith(borderRadius: BorderRadius.zero),
-                            clipBehavior: Clip.hardEdge,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    color: Colors.black,
-                                    child: RTCVideoView(_localRenderer, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover),
-                                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9, // Wide split screen
+                      child: RepaintBoundary(
+                        key: _cameraRowKey,
+                        child: Container(
+                          decoration: AppTheme.velvetCard().copyWith(borderRadius: BorderRadius.zero),
+                          clipBehavior: Clip.hardEdge,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  color: Colors.black,
+                                  child: RTCVideoView(_localRenderer, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover),
                                 ),
-                                Container(width: 4, color: AppTheme.bg2), // Divider
-                                Expanded(
-                                  child: Container(
-                                    color: Colors.black,
-                                    child: _inCalling 
-                                      ? RTCVideoView(_remoteRenderer, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
-                                      : const Center(child: CircularProgressIndicator(color: AppTheme.rose)),
-                                  ),
+                              ),
+                              Container(width: 4, color: AppTheme.bg2), // Divider
+                              Expanded(
+                                child: Container(
+                                  color: Colors.black,
+                                  child: _inCalling 
+                                    ? RTCVideoView(_remoteRenderer, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
+                                    : const Center(child: CircularProgressIndicator(color: AppTheme.rose)),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
-                  
-                  // Film strip preview area
-                  Container(
-                    height: 100,
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _capturedPhotos.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          width: 80,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppTheme.rose, width: 2),
-                            borderRadius: BorderRadius.circular(8),
+                ),
+                
+                // Film strip mini-preview area
+                Container(
+                  height: 100,
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _capturedPhotos.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        width: 80,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.rose, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: RawImage(
+                            image: _capturedPhotos[index],
+                            fit: BoxFit.cover,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: RawImage(
-                              image: _capturedPhotos[index],
-                              fit: BoxFit.cover,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                if (widget.room.isHost)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Space reserved for balance if undo is hidden
+                        if (_capturedPhotos.isEmpty) const SizedBox(width: 48, height: 48),
+                        if (_capturedPhotos.isNotEmpty)
+                           InkWell(
+                              onTap: _triggerUndo,
+                              customBorder: const CircleBorder(),
+                              child: const CircleAvatar(
+                                radius: 24,
+                                backgroundColor: AppTheme.bg2,
+                                child: Icon(Icons.undo, color: AppTheme.rose),
+                              ),
+                           ),
+                        const SizedBox(width: 48),
+
+                        // Big Capture Button
+                        InkWell(
+                          onTap: _triggerSnap,
+                          customBorder: const CircleBorder(),
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                               shape: BoxShape.circle,
+                               border: Border.all(color: AppTheme.rose.withOpacity(0.5), width: 6),
+                            ),
+                            child: Container(
+                               margin: const EdgeInsets.all(4),
+                               decoration: const BoxDecoration(
+                                 shape: BoxShape.circle,
+                                 color: AppTheme.rose,
+                               ),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(width: 48),
+                        
+                        // Balance empty space to keep button centered
+                        const SizedBox(width: 48, height: 48),
+                      ],
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Text(
+                      'Host controls the camera!',
+                      style: AppTheme.body(14, color: AppTheme.textSecondary),
                     ),
                   ),
-
-                  if (widget.room.isHost)
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          if (_capturedPhotos.isNotEmpty)
-                            AppTheme.roseButton(label: 'Undo', onTap: _triggerUndo, outlined: true),
-                          
-                          if (_capturedPhotos.length < 4)
-                            AppTheme.roseButton(label: 'Snap (Space)', onTap: _triggerSnap),
-                            
-                          if (_capturedPhotos.length == 4)
-                            AppTheme.roseButton(label: 'Download Strip!', onTap: _savePhotostrip),
-                        ],
-                      ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        _capturedPhotos.length == 4 
-                          ? 'Waiting for host to save or undo...'
-                          : 'Host controls the camera!',
-                        style: AppTheme.body(14, color: AppTheme.textSecondary),
-                      ),
-                    ),
-                ],
+              ],
+            ),
+            
+            // Flash overlay
+            if (_isFlashing)
+              Positioned.fill(
+                child: Container(color: Colors.white),
               ),
-              
-              // Flash overlay
-              if (_isFlashing)
-                Positioned.fill(
-                  child: Container(color: Colors.white),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
-
