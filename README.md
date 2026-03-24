@@ -9,7 +9,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
-[🌐 Live Web App](https://uslove-frontend.onrender.com) · [📱 Download APK](#-download) · [📄 SRS Document](./CouplesGamePlatform_SRS.docx)
+[🌐 Live Web App](https://uslove.onrender.com) · [📱 Download APK](#-download) · [📄 SRS Document](./CouplesGamePlatform_SRS.docx)
 
 </div>
 
@@ -200,7 +200,7 @@ GoRoute(path: '/game/your_game', builder: (_,__) => YourGameScreen()),
 | Service | URL |
 |---|---|
 | Backend API | https://uslove-backend.onrender.com |
-| Web App | https://uslove-frontend.onrender.com |
+| Web App | https://uslove.onrender.com |
 
 > **Note:** Free tier instances sleep after 15 mins of inactivity. First request may take ~30 seconds to wake up.
 
