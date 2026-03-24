@@ -1,18 +1,7 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
-FROM debian:bullseye-slim AS build
+# Using a pre-built Flutter image is more reliable on platforms like Render
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
-
-# Install dependencies for Flutter
-RUN apt-get update && apt-get install -y \
-    curl git unzip xz-utils libglu1-mesa ca-certificates tar \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Flutter
-RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-# Verify flutter installation
-RUN flutter --version
 
 # Copy project files
 COPY . .
@@ -23,7 +12,6 @@ ARG USE_HTTPS=true
 
 # Get dependencies and build web
 RUN flutter config --no-analytics
-RUN flutter precache --web
 RUN flutter pub get
 RUN flutter build web \
     --dart-define=SERVER_HOST=${BACKEND_HOST} \
@@ -35,9 +23,6 @@ WORKDIR /usr/share/nginx/html
 
 # Copy build artifacts
 COPY --from=build /app/build/web .
-
-# Copy custom nginx config if needed (optional)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
