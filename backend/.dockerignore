@@ -10,9 +10,6 @@ Dockerfile
 .env
 application-local.properties
 HELP.md
-gradlew
-gradlew.bat
-gradle/
 frontend/
 node_modules/
 *.log
