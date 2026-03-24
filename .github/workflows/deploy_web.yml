@@ -1,0 +1,33 @@
+name: Deploy Flutter Web
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: cd frontend && flutter pub get
+
+      - name: Build Web
+        run: |
+          cd frontend
+          flutter build web \
+            --dart-define=USE_HTTPS=true \
+            --dart-define=SERVER_HOST=${{ secrets.BACKEND_HOST }}
+
+      # (Optional) Deploy to GitHub Pages or Render Static
+      # For GitHub Pages, you'd use peaceiris/actions-gh-pages@v3

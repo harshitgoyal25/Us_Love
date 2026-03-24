@@ -1,0 +1,16 @@
+.git
+.dart_tool
+.fvm
+.idea
+.vscode
+build
+ios
+android
+linux
+macos
+windows
+test
+Dockerfile
+.dockerignore
+pubspec.lock
+*.log
