@@ -33,7 +33,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     {'id': 'custom_quiz', 'title': 'How Well Do You Know Me?', 'emoji': '🎯', 'description': 'Test your knowledge of each other'},
     {'id': 'dots_and_boxes', 'title': 'Dots & Boxes', 'emoji': '🔳', 'description': 'Classic strategic board game'},
     {'id': 'co_draw', 'title': 'Shared Canvas', 'emoji': '🎨', 'description': 'Draw together in real time'},
-    {'id': 'photobooth', 'title': 'Photobooth', 'emoji': '📸', 'description': 'Take 4 fun split-screen photos'},
+    // {'id': 'photobooth', 'title': 'Photobooth', 'emoji': '📸', 'description': 'Take 4 fun split-screen photos'},
   ];
 
   @override
