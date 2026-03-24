@@ -32,6 +32,6 @@ node_modules/
 build/
 .dart_tool/
 .fvm/
-.gradle/
+backend/.gradle/
 out/
 target/

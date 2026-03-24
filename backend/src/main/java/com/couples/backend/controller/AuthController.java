@@ -30,4 +30,9 @@ public class AuthController {
             req.getEmail(), req.getPassword()
         ));
     }
+
+    @GetMapping("/health")
+public ResponseEntity<?> health() {
+    return ResponseEntity.ok(Map.of("status", "ok"));
+}
 }
