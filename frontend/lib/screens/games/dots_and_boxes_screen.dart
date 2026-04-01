@@ -20,15 +20,15 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
   String? _myName;
   String? _partnerId;
   String? _partnerName;
-  
+
   final int rows = 5; // 5 dots per row
   final int cols = 5; // 5 dots per col
-  
-  // State 
+
+  // State
   late List<List<String?>> horizontalLines; // rows x (cols-1)
-  late List<List<String?>> verticalLines;   // (rows-1) x cols
-  late List<List<String?>> boxes;           // (rows-1) x (cols-1)
-  
+  late List<List<String?>> verticalLines; // (rows-1) x cols
+  late List<List<String?>> boxes; // (rows-1) x (cols-1)
+
   int myScore = 0;
   int partnerScore = 0;
   bool isMyTurn = false;
@@ -52,7 +52,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
     final prefs = await SharedPreferences.getInstance();
     _myId = prefs.getString('userId');
     _myName = prefs.getString('name') ?? '';
-    
+
     _socket.connect(
       roomId: widget.room.roomId,
       token: prefs.getString('token') ?? '',
@@ -63,7 +63,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
             'action': 'SYNC_PLAYER',
             'userId': _myId,
             'userName': _myName,
-          }
+          },
         });
       },
       onMessage: (event) {
@@ -73,10 +73,6 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           if (payload != null) {
             _handleGameAction(payload);
           }
-        } else if (type == 'BACK_TO_LOBBY') {
-           if (mounted) {
-             context.go('/lobby', extra: widget.room);
-           }
         }
       },
     );
@@ -84,7 +80,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
 
   void _handleGameAction(Map<String, dynamic> payload) {
     if (!mounted) return;
-    
+
     final action = payload['action'];
     if (action == 'SYNC_PLAYER') {
       if (payload['userId'] != _myId) {
@@ -102,7 +98,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
               'userId': _myId,
               'userName': _myName,
               'isAck': true, // Prevent infinite loop syncing
-            }
+            },
           });
         }
       }
@@ -111,7 +107,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
       final int r = payload['r'];
       final int c = payload['c'];
       final String playerId = payload['userId'];
-      
+
       if (playerId == _myId) return;
 
       _applyLine(lineType, r, c, playerId);
@@ -174,9 +170,9 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
 
   bool _isBoxComplete(int r, int c) {
     return horizontalLines[r][c] != null &&
-           horizontalLines[r + 1][c] != null &&
-           verticalLines[r][c] != null &&
-           verticalLines[r][c + 1] != null;
+        horizontalLines[r + 1][c] != null &&
+        verticalLines[r][c] != null &&
+        verticalLines[r][c + 1] != null;
   }
 
   void _recalculateScores() {
@@ -184,8 +180,10 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
     int partnerS = 0;
     for (int r = 0; r < rows - 1; r++) {
       for (int c = 0; c < cols - 1; c++) {
-        if (boxes[r][c] == _myId) myS++;
-        else if (boxes[r][c] != null) partnerS++;
+        if (boxes[r][c] == _myId)
+          myS++;
+        else if (boxes[r][c] != null)
+          partnerS++;
       }
     }
     myScore = myS;
@@ -207,16 +205,18 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
       isGameOver = true;
       if (widget.room.isHost) {
         String? winnerId;
-        if (myScore > partnerScore) winnerId = _myId;
-        else if (partnerScore > myScore) winnerId = _partnerId;
-        
+        if (myScore > partnerScore)
+          winnerId = _myId;
+        else if (partnerScore > myScore)
+          winnerId = _partnerId;
+
         _socket.sendEvent(widget.room.roomId, {
           'type': 'GAME_END',
           'payload': {
-            'scoreA': myScore, 
+            'scoreA': myScore,
             'scoreB': partnerScore,
             'winnerId': winnerId,
-          }
+          },
         });
       }
     }
@@ -224,7 +224,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
 
   void _onLineTap(String lineType, int r, int c) {
     if (!isMyTurn || isGameOver) return;
-    
+
     if (lineType == 'horizontal' && horizontalLines[r][c] != null) return;
     if (lineType == 'vertical' && verticalLines[r][c] != null) return;
 
@@ -236,7 +236,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
         'r': r,
         'c': c,
         'userId': _myId,
-      }
+      },
     });
 
     _applyLine(lineType, r, c, _myId!);
@@ -270,10 +270,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
-                  child: AspectRatio(
-                    aspectRatio: 1.0,
-                    child: _buildGrid(),
-                  ),
+                  child: AspectRatio(aspectRatio: 1.0, child: _buildGrid()),
                 ),
               ),
             ),
@@ -283,10 +280,14 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
                 child: Column(
                   children: [
                     Text(
-                      myScore > partnerScore 
-                        ? '🎉 You Win!' 
-                        : (partnerScore > myScore ? '${_partnerName ?? "Partner"} Wins!' : 'It\'s a Tie!'),
-                      style: AppTheme.display(28).copyWith(color: AppTheme.rose),
+                      myScore > partnerScore
+                          ? '🎉 You Win!'
+                          : (partnerScore > myScore
+                                ? '${_partnerName ?? "Partner"} Wins!'
+                                : 'It\'s a Tie!'),
+                      style: AppTheme.display(
+                        28,
+                      ).copyWith(color: AppTheme.rose),
                     ),
                     const SizedBox(height: 16),
                     SharedLeaveGameButton(room: widget.room, socket: _socket),
@@ -297,7 +298,9 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
-                  isMyTurn ? "Your Turn!" : "Waiting for ${_partnerName ?? 'Partner'}...",
+                  isMyTurn
+                      ? "Your Turn!"
+                      : "Waiting for ${_partnerName ?? 'Partner'}...",
                   style: AppTheme.display(20).copyWith(
                     color: isMyTurn ? AppTheme.rose : AppTheme.textSecondary,
                   ),
@@ -319,7 +322,11 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildScorePill('You', myScore, myColor),
-          _buildScorePill(_partnerName ?? 'Partner', partnerScore, partnerColor),
+          _buildScorePill(
+            _partnerName ?? 'Partner',
+            partnerScore,
+            partnerColor,
+          ),
         ],
       ),
     );
@@ -343,7 +350,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           Text(name, style: AppTheme.body(14)),
           const SizedBox(width: 12),
           Text(
-            score.toString(), 
+            score.toString(),
             style: AppTheme.display(24).copyWith(color: teamColor),
           ),
         ],
@@ -358,8 +365,10 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           int r = index ~/ 2;
           return Row(
             children: List.generate(cols * 2 - 1, (colIndex) {
-              if (colIndex % 2 == 0) return _buildDot();
-              else return Expanded(child: _buildHorizontalLine(r, colIndex ~/ 2));
+              if (colIndex % 2 == 0)
+                return _buildDot();
+              else
+                return Expanded(child: _buildHorizontalLine(r, colIndex ~/ 2));
             }),
           );
         } else {
@@ -367,8 +376,10 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           return Expanded(
             child: Row(
               children: List.generate(cols * 2 - 1, (colIndex) {
-                if (colIndex % 2 == 0) return _buildVerticalLine(r, colIndex ~/ 2);
-                else return Expanded(child: _buildBox(r, colIndex ~/ 2));
+                if (colIndex % 2 == 0)
+                  return _buildVerticalLine(r, colIndex ~/ 2);
+                else
+                  return Expanded(child: _buildBox(r, colIndex ~/ 2));
               }),
             ),
           );
@@ -398,7 +409,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
   Widget _buildHorizontalLine(int r, int c) {
     String? ownerId = horizontalLines[r][c];
     Color lineColor = ownerId == null ? AppTheme.bg2 : _getPlayerColor(ownerId);
-    
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _onLineTap('horizontal', r, c),
@@ -410,13 +421,15 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           decoration: BoxDecoration(
             color: lineColor,
             borderRadius: BorderRadius.circular(4),
-            boxShadow: ownerId == null ? [] : [
-              BoxShadow(
-                color: lineColor.withOpacity(0.5),
-                blurRadius: 4,
-                offset: const Offset(1, 1),
-              )
-            ],
+            boxShadow: ownerId == null
+                ? []
+                : [
+                    BoxShadow(
+                      color: lineColor.withOpacity(0.5),
+                      blurRadius: 4,
+                      offset: const Offset(1, 1),
+                    ),
+                  ],
           ),
         ),
       ),
@@ -426,7 +439,7 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
   Widget _buildVerticalLine(int r, int c) {
     String? ownerId = verticalLines[r][c];
     Color lineColor = ownerId == null ? AppTheme.bg2 : _getPlayerColor(ownerId);
-    
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _onLineTap('vertical', r, c),
@@ -438,13 +451,15 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
           decoration: BoxDecoration(
             color: lineColor,
             borderRadius: BorderRadius.circular(4),
-            boxShadow: ownerId == null ? [] : [
-              BoxShadow(
-                color: lineColor.withOpacity(0.5),
-                blurRadius: 4,
-                offset: const Offset(1, 1),
-              )
-            ],
+            boxShadow: ownerId == null
+                ? []
+                : [
+                    BoxShadow(
+                      color: lineColor.withOpacity(0.5),
+                      blurRadius: 4,
+                      offset: const Offset(1, 1),
+                    ),
+                  ],
           ),
         ),
       ),
@@ -455,27 +470,26 @@ class _DotsAndBoxesScreenState extends State<DotsAndBoxesScreen> {
     String? ownerId = boxes[r][c];
     bool isFilled = ownerId != null;
     Color? boxColor = isFilled ? _getPlayerColor(ownerId) : null;
-    
+
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: !isFilled
-               ? Colors.transparent 
-               : boxColor!.withOpacity(0.2),
+        color: !isFilled ? Colors.transparent : boxColor!.withOpacity(0.2),
         borderRadius: BorderRadius.circular(6),
-        border: !isFilled ? null : Border.all(
-          color: boxColor!.withOpacity(0.5),
-          width: 2,
-        ),
+        border: !isFilled
+            ? null
+            : Border.all(color: boxColor!.withOpacity(0.5), width: 2),
       ),
-      child: !isFilled ? null : Center(
-        child: Text(
-          ownerId == _myId ? _getInitial(_myName) : _getInitial(_partnerName),
-          style: AppTheme.display(24).copyWith(
-            color: boxColor,
-          ),
-        ),
-      ),
+      child: !isFilled
+          ? null
+          : Center(
+              child: Text(
+                ownerId == _myId
+                    ? _getInitial(_myName)
+                    : _getInitial(_partnerName),
+                style: AppTheme.display(24).copyWith(color: boxColor),
+              ),
+            ),
     );
   }
 }

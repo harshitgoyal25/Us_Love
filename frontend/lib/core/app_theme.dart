@@ -4,17 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── Palette (Velvet Hearts - The Digital Hearth) ──────────────────────────
-  static const Color bg1 = Color(0xFF161213);               // Deep nocturnal base
-  static const Color bg2 = Color(0xFF1F1A1B);               // surface_container_low
-  static const Color bg3 = Color(0xFF2D292A);               // surface_container_high
-  
-  static const Color rose = Color(0xFFFFB3B5);              // primary (neon romantic pink)
-  static const Color roseDark = Color(0xFFFF5167);          // primary_container
-  static const Color gold = Color(0xFFFFD166);              // contrasting gold/yellow
-  
-  static const Color textPrimary = Color(0xFFEAE0E1);       // on_surface (creamy white)
-  static const Color textSecondary = Color(0xFFE6BCBD);     // on_surface_variant
-  static const Color shadowAmbient = Color(0x0DEAE0E1);     // 5% ambient glow using on_surface
+  static const Color bg1 = Color(0xFF161213); // Deep nocturnal base
+  static const Color bg2 = Color(0xFF1F1A1B); // surface_container_low
+  static const Color bg3 = Color(0xFF2D292A); // surface_container_high
+
+  static const Color rose = Color(0xFFFFB3B5); // primary (neon romantic pink)
+  static const Color roseDark = Color(0xFFFF5167); // primary_container
+  static const Color gold = Color(0xFFFFD166); // contrasting gold/yellow
+
+  static const Color textPrimary = Color(
+    0xFFEAE0E1,
+  ); // on_surface (creamy white)
+  static const Color textSecondary = Color(0xFFE6BCBD); // on_surface_variant
+  static const Color shadowAmbient = Color(
+    0x0DEAE0E1,
+  ); // 5% ambient glow using on_surface
 
   // ── Gradients ──────────────────────────────────────────────────────────────
   static const LinearGradient bgGradient = LinearGradient(
@@ -31,76 +35,84 @@ class AppTheme {
 
   // ── Typography (Editorial Romance) ─────────────────────────────────────────
   static TextStyle display(double size) => GoogleFonts.plusJakartaSans(
-        fontSize: size,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-        letterSpacing: -0.02 * size, // Tight letter spacing for authoritative feel
-      );
+    fontSize: size,
+    fontWeight: FontWeight.w700,
+    color: textPrimary,
+    letterSpacing: -0.02 * size, // Tight letter spacing for authoritative feel
+  );
 
   static TextStyle body(double size, {Color? color}) => GoogleFonts.inter(
-        fontSize: size,
-        color: color ?? textSecondary,
-        fontWeight: FontWeight.w400,
-      );
+    fontSize: size,
+    color: color ?? textSecondary,
+    fontWeight: FontWeight.w400,
+  );
 
   static TextStyle label(double size) => GoogleFonts.inter(
-        fontSize: size,
-        color: textPrimary,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.3,
-      );
+    fontSize: size,
+    color: textPrimary,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.3,
+  );
 
   // ── Velvet Form & Glassmorphism ────────────────────────────────────────────
 
   // Replaces the physical raised container with intentional asymmetrical ambient floating depth
   static BoxDecoration velvetCard({double radius = 24}) => BoxDecoration(
-        color: bg3,
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: const [
-          BoxShadow(
-            color: shadowAmbient,
-            blurRadius: 40,
-            offset: Offset(0, 0), // Ambient 0px offset
-          ),
-        ],
-      );
+    color: bg3,
+    borderRadius: BorderRadius.circular(radius),
+    boxShadow: const [
+      BoxShadow(
+        color: shadowAmbient,
+        blurRadius: 40,
+        offset: Offset(0, 0), // Ambient 0px offset
+      ),
+    ],
+  );
 
   static BoxDecoration velvetCardPressed({double radius = 24}) => BoxDecoration(
-        color: bg2,
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: const [],
-      );
+    color: bg2,
+    borderRadius: BorderRadius.circular(radius),
+    boxShadow: const [],
+  );
 
   // Glassmorphic overlay cards (The "Glass & Gradient" Rule)
   static BoxDecoration glassCard({double radius = 24}) => BoxDecoration(
-        color: const Color(0xFF383335).withOpacity(0.5), // surface_variant @ 50%
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: const Color(0xFF5D3F40).withOpacity(0.15), width: 1), // Ghost border fallback
-        boxShadow: const [
-          BoxShadow(
-            color: shadowAmbient,
-            blurRadius: 32,
-            offset: Offset(0, 0),
-          ),
-        ],
-      );
+    color: const Color(0xFF383335).withOpacity(0.5), // surface_variant @ 50%
+    borderRadius: BorderRadius.circular(radius),
+    border: Border.all(
+      color: const Color(0xFF5D3F40).withOpacity(0.15),
+      width: 1,
+    ), // Ghost border fallback
+    boxShadow: const [
+      BoxShadow(color: shadowAmbient, blurRadius: 32, offset: Offset(0, 0)),
+    ],
+  );
 
   // ── Input decoration ───────────────────────────────────────────────────────
   static InputDecoration inputDeco(String hint, IconData icon) =>
       InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(color: textSecondary.withOpacity(0.6), fontSize: 14),
+        hintStyle: GoogleFonts.inter(
+          color: textSecondary.withOpacity(0.6),
+          fontSize: 14,
+        ),
         prefixIcon: Icon(icon, color: textSecondary, size: 18),
         filled: true,
         fillColor: bg3, // surface_container_highest
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none, // "No-line" rule
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: rose, width: 2), // Active tint on bottom
+          borderSide: const BorderSide(
+            color: rose,
+            width: 2,
+          ), // Active tint on bottom
         ),
       );
 
@@ -174,8 +186,8 @@ class _GlowButtonState extends State<_GlowButton> {
           gradient: widget.outlined ? null : AppTheme.primaryGradient,
           color: widget.outlined ? Colors.transparent : null,
           borderRadius: BorderRadius.circular(100), // Fully rounded for buttons
-          border: widget.outlined 
-              ? Border.all(color: AppTheme.rose.withOpacity(0.5), width: 1.5) 
+          border: widget.outlined
+              ? Border.all(color: AppTheme.rose.withOpacity(0.5), width: 1.5)
               : null,
           boxShadow: _isPressed || widget.onTap == null || widget.outlined
               ? []
@@ -195,14 +207,16 @@ class _GlowButtonState extends State<_GlowButton> {
                   child: CircularProgressIndicator(
                     color: widget.outlined ? AppTheme.rose : AppTheme.bg1,
                     strokeWidth: 2,
-                  )
+                  ),
                 )
               : Text(
                   widget.label,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: widget.outlined ? AppTheme.rose : AppTheme.bg1, // High contrast
+                    color: widget.outlined
+                        ? AppTheme.rose
+                        : AppTheme.bg1, // High contrast
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -277,9 +291,7 @@ class _FloatingHeartsBackgroundState extends State<FloatingHeartsBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(color: AppTheme.bg1),
-        ),
+        Container(decoration: const BoxDecoration(color: AppTheme.bg1)),
         ...List.generate(_hearts.length, (i) {
           final h = _hearts[i];
           return AnimatedBuilder(
@@ -289,13 +301,16 @@ class _FloatingHeartsBackgroundState extends State<FloatingHeartsBackground>
               final opacity = t < 0.15
                   ? t / 0.15
                   : t > 0.85
-                      ? (1 - t) / 0.15
-                      : 1.0;
+                  ? (1 - t) / 0.15
+                  : 1.0;
               return Positioned(
                 left: MediaQuery.of(context).size.width * h.left,
                 bottom: MediaQuery.of(context).size.height * t - h.size,
                 child: Opacity(
-                  opacity: (opacity * 0.15).clamp(0, 1), // Very subtle background glow
+                  opacity: (opacity * 0.15).clamp(
+                    0,
+                    1,
+                  ), // Very subtle background glow
                   child: ImageFilterBlur(
                     child: Container(
                       decoration: BoxDecoration(
@@ -336,7 +351,10 @@ class ImageFilterBlur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5), // Soft bokeh effect backing hearts
+      imageFilter: ImageFilter.blur(
+        sigmaX: 5,
+        sigmaY: 5,
+      ), // Soft bokeh effect backing hearts
       child: child,
     );
   }
@@ -383,30 +401,33 @@ class VelvetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 460,
-      padding: const EdgeInsets.all(36),
-      decoration: BoxDecoration(
-        color: AppTheme.bg3,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppTheme.rose.withOpacity(0.06),
-          width: 1,
+    final width = MediaQuery.of(context).size.width;
+    final horizontalPadding = width < 380 ? 20.0 : 36.0;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 460),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(horizontalPadding),
+        decoration: BoxDecoration(
+          color: AppTheme.bg3,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppTheme.rose.withOpacity(0.06), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.rose.withOpacity(0.04),
+              blurRadius: 60,
+              spreadRadius: 10,
+            ),
+            BoxShadow(
+              color: AppTheme.shadowAmbient,
+              blurRadius: 40,
+              offset: Offset.zero,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.rose.withOpacity(0.04),
-            blurRadius: 60,
-            spreadRadius: 10,
-          ),
-          BoxShadow(
-            color: AppTheme.shadowAmbient,
-            blurRadius: 40,
-            offset: Offset.zero,
-          ),
-        ],
+        child: child,
       ),
-      child: child,
     );
   }
 }

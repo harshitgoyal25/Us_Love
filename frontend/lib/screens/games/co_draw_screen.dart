@@ -34,7 +34,7 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
   String _myId = '';
   List<DrawingPoint> _myPoints = [];
   List<DrawingPoint> _partnerPoints = [];
-  
+
   Color _selectedColor = AppTheme.rose;
   double _strokeWidth = 4.0;
 
@@ -69,7 +69,8 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
         final action = payload['action'];
         if (action == 'DRAW') {
           String? senderId = payload['userId'];
-          if (senderId != null && senderId == _myId && senderId.isNotEmpty) return;
+          if (senderId != null && senderId == _myId && senderId.isNotEmpty)
+            return;
 
           double? x = payload['x']?.toDouble();
           double? y = payload['y']?.toDouble();
@@ -106,10 +107,6 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
           }
         }
       }
-    } else if (event['type'] == 'BACK_TO_LOBBY') {
-      if (mounted) {
-        context.go('/lobby', extra: widget.room);
-      }
     }
   }
 
@@ -145,7 +142,7 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
         'color': '0x${_selectedColor.value.toRadixString(16).padLeft(8, '0')}',
         'width': _strokeWidth,
         'isEnd': isEnd,
-      }
+      },
     });
   }
 
@@ -156,7 +153,7 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
     });
     _socket.sendEvent(widget.room.roomId, {
       'type': 'GAME_ACTION',
-      'payload': {'action': 'CLEAR'}
+      'payload': {'action': 'CLEAR'},
     });
   }
 
@@ -174,27 +171,31 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
         status = await Permission.photos.request();
       }
     }
-    
+
     try {
-      RenderRepaintBoundary boundary = _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary =
+          _globalKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       var byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
 
       final fileName = "CoDraw_${DateTime.now().millisecondsSinceEpoch}";
-      
+
       final String resultPath = await FileSaver.instance.saveFile(
         name: fileName,
         bytes: buffer,
         ext: "png",
         mimeType: MimeType.png,
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              resultPath.isNotEmpty ? 'Masterpiece saved!' : 'Failed to save image.',
+              resultPath.isNotEmpty
+                  ? 'Masterpiece saved!'
+                  : 'Failed to save image.',
               style: AppTheme.body(14, color: AppTheme.textPrimary),
             ),
             backgroundColor: AppTheme.bg3,
@@ -219,8 +220,10 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
       body: FloatingHeartsBackground(
         child: Column(
           children: [
-            SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight + 16),
-            
+            SizedBox(
+              height: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+            ),
+
             // Canvas Area
             Expanded(
               child: Padding(
@@ -233,8 +236,10 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
                     child: Container(
                       color: AppTheme.bg1, // Drawing background
                       child: GestureDetector(
-                        onPanStart: (details) => _addPoint(details.localPosition),
-                        onPanUpdate: (details) => _addPoint(details.localPosition),
+                        onPanStart: (details) =>
+                            _addPoint(details.localPosition),
+                        onPanUpdate: (details) =>
+                            _addPoint(details.localPosition),
                         onPanEnd: (details) => _addPoint(null),
                         child: CustomPaint(
                           painter: DrawingPainter(
@@ -249,12 +254,16 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Tools Area
             Container(
-              margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16, left: 16, right: 16),
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+                left: 16,
+                right: 16,
+              ),
               padding: const EdgeInsets.all(16),
               decoration: AppTheme.glassCard(),
               child: Column(
@@ -262,31 +271,43 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: _colors.map((color) => GestureDetector(
-                      onTap: () => setState(() => _selectedColor = color),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _selectedColor == color ? AppTheme.textPrimary : Colors.transparent,
-                            width: 3,
+                    children: _colors
+                        .map(
+                          (color) => GestureDetector(
+                            onTap: () => setState(() => _selectedColor = color),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _selectedColor == color
+                                      ? AppTheme.textPrimary
+                                      : Colors.transparent,
+                                  width: 3,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppTheme.shadowAmbient,
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          boxShadow: const [
-                            BoxShadow(color: AppTheme.shadowAmbient, blurRadius: 10)
-                          ]
-                        ),
-                      ),
-                    )).toList(),
+                        )
+                        .toList(),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: AppTheme.textSecondary),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppTheme.textSecondary,
+                        ),
                         onPressed: _clearCanvas,
                         tooltip: 'Clear',
                       ),
@@ -297,7 +318,8 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
                           max: 20.0,
                           activeColor: AppTheme.rose,
                           inactiveColor: AppTheme.bg2,
-                          onChanged: (val) => setState(() => _strokeWidth = val),
+                          onChanged: (val) =>
+                              setState(() => _strokeWidth = val),
                         ),
                       ),
                       IconButton(
@@ -306,10 +328,10 @@ class _CoDrawScreenState extends State<CoDrawScreen> {
                         tooltip: 'Save to Gallery',
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -333,10 +355,16 @@ class DrawingPainter extends CustomPainter {
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i].offset != null && points[i + 1].offset != null) {
         // Draw line between points
-        canvas.drawLine(points[i].offset!, points[i + 1].offset!, points[i].paint);
+        canvas.drawLine(
+          points[i].offset!,
+          points[i + 1].offset!,
+          points[i].paint,
+        );
       } else if (points[i].offset != null && points[i + 1].offset == null) {
         // Draw point
-        canvas.drawPoints(ui.PointMode.points, [points[i].offset!], points[i].paint);
+        canvas.drawPoints(ui.PointMode.points, [
+          points[i].offset!,
+        ], points[i].paint);
       }
     }
   }

@@ -28,11 +28,28 @@ class _LobbyScreenState extends State<LobbyScreen>
   late final Animation<Offset> _cardSlide;
   String? _currentRole;
   String? _myUserId;
+  String? _hostName;
+  String? _guestName;
 
   final List<Map<String, dynamic>> games = [
-    {'id': 'custom_quiz', 'title': 'How Well Do You Know Me?', 'emoji': '🎯', 'description': 'Test your knowledge of each other'},
-    {'id': 'dots_and_boxes', 'title': 'Dots & Boxes', 'emoji': '🔳', 'description': 'Classic strategic board game'},
-    {'id': 'co_draw', 'title': 'Shared Canvas', 'emoji': '🎨', 'description': 'Draw together in real time'},
+    {
+      'id': 'custom_quiz',
+      'title': 'How Well Do You Know Me?',
+      'emoji': '🎯',
+      'description': 'Test your knowledge of each other',
+    },
+    {
+      'id': 'dots_and_boxes',
+      'title': 'Dots & Boxes',
+      'emoji': '🔳',
+      'description': 'Classic strategic board game',
+    },
+    {
+      'id': 'co_draw',
+      'title': 'Shared Canvas',
+      'emoji': '🎨',
+      'description': 'Draw together in real time',
+    },
     // {'id': 'photobooth', 'title': 'Photobooth', 'emoji': '📸', 'description': 'Take 4 fun split-screen photos'},
   ];
 
@@ -40,6 +57,8 @@ class _LobbyScreenState extends State<LobbyScreen>
   void initState() {
     super.initState();
     _currentRole = widget.room.role;
+    _hostName = widget.room.hostName;
+    _guestName = widget.room.guestName;
     _connectSocket();
     _pulseCtrl = AnimationController(
       vsync: this,
@@ -70,7 +89,7 @@ class _LobbyScreenState extends State<LobbyScreen>
         if (_currentRole != 'HOST') {
           _socket.sendEvent(widget.room.roomId, {
             'type': 'PARTNER_JOINED',
-            'payload': {'userId': _myUserId}
+            'payload': {'userId': _myUserId},
           });
           if (mounted) {
             setState(() => partnerConnected = true);
@@ -78,24 +97,33 @@ class _LobbyScreenState extends State<LobbyScreen>
         } else {
           _socket.sendEvent(widget.room.roomId, {
             'type': 'LOBBY_SYNC',
-            'payload': {
-              'action': 'LOBBY_SYNC',
-              'userId': _myUserId,
-            }
+            'payload': {'action': 'LOBBY_SYNC', 'userId': _myUserId},
           });
         }
       },
       onMessage: (event) {
         final type = event['type'];
         if (type == 'PARTNER_JOINED') {
-          setState(() => partnerConnected = true);
+          setState(() {
+            partnerConnected = true;
+            _hostName = event['hostName']?.toString() ?? _hostName;
+            _guestName = event['guestName']?.toString() ?? _guestName;
+          });
         } else if (type == 'PARTNER_LEFT') {
           setState(() => partnerConnected = false);
         } else if (type == 'ROOM_UPDATE') {
           final hostId = event['hostId']?.toString();
           final myId = _myUserId?.toString();
-          
-          if (hostId != null && myId != null && 
+
+          if (mounted) {
+            setState(() {
+              _hostName = event['hostName']?.toString() ?? _hostName;
+              _guestName = event['guestName']?.toString() ?? _guestName;
+            });
+          }
+
+          if (hostId != null &&
+              myId != null &&
               hostId.trim().toLowerCase() == myId.trim().toLowerCase()) {
             if (mounted) {
               setState(() {
@@ -114,7 +142,10 @@ class _LobbyScreenState extends State<LobbyScreen>
           if (payload != null) {
             if (payload['action'] == 'LOBBY_SYNC') {
               if (_currentRole != 'HOST') {
-                _socket.sendEvent(widget.room.roomId, {'type': 'PARTNER_JOINED'});
+                _socket.sendEvent(widget.room.roomId, {
+                  'type': 'PARTNER_JOINED',
+                  'payload': {'userId': _myUserId},
+                });
               }
             } else if (payload['action'] == 'PARTNER_LEFT') {
               setState(() => partnerConnected = false);
@@ -153,6 +184,9 @@ class _LobbyScreenState extends State<LobbyScreen>
               partnerConnected: partnerConnected,
               pulseCtrl: _pulseCtrl,
               myUserId: _myUserId,
+              currentRole: _currentRole,
+              hostName: _hostDisplayName(),
+              guestName: _guestDisplayName(),
               socket: _socket,
             ),
 
@@ -185,8 +219,8 @@ class _LobbyScreenState extends State<LobbyScreen>
               const SizedBox(height: 8),
               Text(
                 partnerConnected
-                    ? 'Your partner is ready. Pick a game! 💕'
-                    : 'Waiting for your partner to join...',
+                    ? '${_partnerDisplayName()} is ready. Pick a game! 💕'
+                    : 'Waiting for ${_partnerDisplayName()} to join...',
                 style: AppTheme.body(14),
                 textAlign: TextAlign.center,
               ),
@@ -198,6 +232,8 @@ class _LobbyScreenState extends State<LobbyScreen>
             games: games,
             isEnabled: partnerConnected,
             isHost: true,
+            hostName: _hostDisplayName(),
+            guestName: _guestDisplayName(),
             onSelect: _selectGame,
           ),
         ),
@@ -215,7 +251,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Text('Available Games', style: AppTheme.display(28)),
               const SizedBox(height: 8),
               Text(
-                'Waiting for the host to pick a game...',
+                'Waiting for ${_hostDisplayName()} to pick a game...',
                 style: AppTheme.body(14),
                 textAlign: TextAlign.center,
               ),
@@ -227,11 +263,30 @@ class _LobbyScreenState extends State<LobbyScreen>
             games: games,
             isEnabled: false,
             isHost: false,
+            hostName: _hostDisplayName(),
+            guestName: _guestDisplayName(),
             onSelect: (_) {},
           ),
         ),
       ],
     );
+  }
+
+  String _hostDisplayName() {
+    final value = _hostName?.trim();
+    return (value == null || value.isEmpty) ? 'Host' : value;
+  }
+
+  String _guestDisplayName() {
+    final value = _guestName?.trim();
+    return (value == null || value.isEmpty) ? 'Guest' : value;
+  }
+
+  String _partnerDisplayName() {
+    if (_currentRole == 'HOST') {
+      return _guestDisplayName();
+    }
+    return _hostDisplayName();
   }
 }
 
@@ -241,18 +296,33 @@ class _FrostedAppBar extends StatelessWidget {
   final bool partnerConnected;
   final AnimationController pulseCtrl;
   final String? myUserId;
+  final String? currentRole;
+  final String hostName;
+  final String guestName;
   final SocketService socket;
-  
+
   const _FrostedAppBar({
     required this.room,
     required this.partnerConnected,
     required this.pulseCtrl,
     required this.myUserId,
+    required this.currentRole,
+    required this.hostName,
+    required this.guestName,
     required this.socket,
   });
 
+  String _partnerName() {
+    if (currentRole == 'HOST') {
+      return guestName;
+    }
+    return hostName;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.of(context).size.width < 780;
+
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -260,8 +330,8 @@ class _FrostedAppBar extends StatelessWidget {
           padding: EdgeInsets.only(
             top: MediaQuery.of(context).padding.top + 12,
             bottom: 12,
-            left: 24,
-            right: 16,
+            left: isCompact ? 16 : 24,
+            right: isCompact ? 12 : 16,
           ),
           decoration: BoxDecoration(
             color: AppTheme.bg1.withOpacity(0.75),
@@ -272,208 +342,225 @@ class _FrostedAppBar extends StatelessWidget {
               ),
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Left: Menu + Room code
-              Row(
-                children: [
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu_rounded, color: AppTheme.rose),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Room Code:',
-                    style: AppTheme.body(12,
-                        color: AppTheme.textSecondary.withOpacity(0.6)),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: room.code));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Room code copied!',
-                            style: AppTheme.body(13, color: Colors.white),
-                          ),
-                          backgroundColor: AppTheme.bg3,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          margin: const EdgeInsets.all(16),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.rose.withOpacity(0.15),
-                            AppTheme.roseDark.withOpacity(0.10),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(
-                          color: AppTheme.rose.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            room.code,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: 3,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.copy_rounded,
-                            size: 14,
-                            color: AppTheme.rose,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Right: Partner status + logout
-              Row(
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: partnerConnected
-                        ? Row(
-                            key: const ValueKey('connected'),
-                            children: [
-                              AnimatedBuilder(
-                                animation: pulseCtrl,
-                                builder: (ctx, _) {
-                                  return Transform.scale(
-                                    scale: 1.0 + (pulseCtrl.value * 0.18),
-                                    child: const Icon(
-                                      Icons.favorite,
-                                      color: AppTheme.rose,
-                                      size: 20,
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Connected',
-                                style: AppTheme.body(13,
-                                    color: AppTheme.gold),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            key: const ValueKey('waiting'),
-                            children: [
-                              const Icon(
-                                Icons.favorite_border,
-                                color: AppTheme.textSecondary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Waiting...',
-                                style: AppTheme.body(13),
-                              ),
-                            ],
-                          ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Glass styled Leave Room Button
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: AppTheme.bg3,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          title: Text('Leave Room?', style: AppTheme.display(20)),
-                          content: Text(
-                            'Are you sure you want to leave this room?',
-                            style: AppTheme.body(14),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text('Cancel',
-                                  style: AppTheme.body(14)),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                socket.sendEvent(room.roomId, {
-                                  'type': 'GAME_ACTION',
-                                  'payload': {
-                                    'action': 'PARTNER_LEFT',
-                                    'userId': myUserId,
-                                  }
-                                });
-                                if (context.mounted) {
-                                  context.go('/home');
-                                }
-                              },
-                              child: Text(
-                                'Leave',
-                                style: AppTheme.body(14,
-                                    color: AppTheme.rose),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.rose.withOpacity(0.12),
-                            AppTheme.bg1.withOpacity(0.2),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(
-                          color: AppTheme.rose.withOpacity(0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        'Leave Room',
-                        style: AppTheme.label(12).copyWith(
-                          color: AppTheme.rose,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: isCompact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildRoomCodeSection(context, compact: true),
+                    const SizedBox(height: 10),
+                    _buildStatusAndLeaveSection(context, compact: true),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildRoomCodeSection(context),
+                    _buildStatusAndLeaveSection(context),
+                  ],
+                ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRoomCodeSection(BuildContext context, {bool compact = false}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: AppTheme.rose),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ),
+        SizedBox(width: compact ? 10 : 16),
+        Text(
+          'Room Code:',
+          style: AppTheme.body(
+            12,
+            color: AppTheme.textSecondary.withOpacity(0.6),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: room.code));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Room code copied!',
+                  style: AppTheme.body(13, color: Colors.white),
+                ),
+                backgroundColor: AppTheme.bg3,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.all(16),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.rose.withOpacity(0.15),
+                  AppTheme.roseDark.withOpacity(0.10),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: AppTheme.rose.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  room.code,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: compact ? 14 : 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                    letterSpacing: compact ? 2 : 3,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.copy_rounded, size: 14, color: AppTheme.rose),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusAndLeaveSection(
+    BuildContext context, {
+    bool compact = false,
+  }) {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: partnerConnected
+              ? Row(
+                  key: const ValueKey('connected'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedBuilder(
+                      animation: pulseCtrl,
+                      builder: (ctx, _) {
+                        return Transform.scale(
+                          scale: 1.0 + (pulseCtrl.value * 0.18),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: AppTheme.rose,
+                            size: 20,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_partnerName()}',
+                      style: AppTheme.body(13, color: AppTheme.gold),
+                    ),
+                  ],
+                )
+              : Row(
+                  key: const ValueKey('waiting'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.favorite_border,
+                      color: AppTheme.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 6),
+                    Text('${_partnerName()}...', style: AppTheme.body(13)),
+                  ],
+                ),
+        ),
+        GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: AppTheme.bg3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Text('Leave Room?', style: AppTheme.display(20)),
+                content: Text(
+                  'Are you sure you want to leave this room?',
+                  style: AppTheme.body(14),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Cancel', style: AppTheme.body(14)),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      socket.sendEvent(room.roomId, {
+                        'type': 'GAME_ACTION',
+                        'payload': {
+                          'action': 'PARTNER_LEFT',
+                          'userId': myUserId,
+                        },
+                      });
+                      if (context.mounted) {
+                        context.go('/home');
+                      }
+                    },
+                    child: Text(
+                      'Leave',
+                      style: AppTheme.body(14, color: AppTheme.rose),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 12 : 16,
+              vertical: compact ? 7 : 8,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.rose.withOpacity(0.12),
+                  AppTheme.bg1.withOpacity(0.2),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: AppTheme.rose.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              'Leave Room',
+              style: AppTheme.label(12).copyWith(
+                color: AppTheme.rose,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -483,12 +570,16 @@ class _GameGrid extends StatelessWidget {
   final List<Map<String, dynamic>> games;
   final bool isEnabled;
   final bool isHost;
+  final String hostName;
+  final String guestName;
   final void Function(String) onSelect;
 
   const _GameGrid({
     required this.games,
     required this.isEnabled,
     required this.isHost,
+    required this.hostName,
+    required this.guestName,
     required this.onSelect,
   });
 
@@ -498,8 +589,10 @@ class _GameGrid extends StatelessWidget {
     final crossAxisCount = width > 900 ? 3 : 2;
 
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8)
-          .copyWith(bottom: 32),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 28,
+        vertical: 8,
+      ).copyWith(bottom: 32),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
@@ -513,6 +606,8 @@ class _GameGrid extends StatelessWidget {
           game: game,
           isEnabled: isEnabled,
           isHost: isHost,
+          hostName: hostName,
+          guestName: guestName,
           onTap: () => onSelect(game['id']),
         );
       },
@@ -525,12 +620,16 @@ class _GameCard extends StatefulWidget {
   final Map<String, dynamic> game;
   final bool isEnabled;
   final bool isHost;
+  final String hostName;
+  final String guestName;
   final VoidCallback onTap;
 
   const _GameCard({
     required this.game,
     required this.isEnabled,
     required this.isHost,
+    required this.hostName,
+    required this.guestName,
     required this.onTap,
   });
 
@@ -573,10 +672,10 @@ class _GameCardState extends State<_GameCard> {
             color: _isPressed
                 ? AppTheme.bg2
                 : _isHovered
-                    ? AppTheme.bg3
-                    : enabled
-                        ? AppTheme.bg3.withOpacity(0.85)
-                        : AppTheme.bg2,
+                ? AppTheme.bg3
+                : enabled
+                ? AppTheme.bg3.withOpacity(0.85)
+                : AppTheme.bg2,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: enabled && _isHovered
@@ -590,14 +689,14 @@ class _GameCardState extends State<_GameCard> {
                       color: AppTheme.rose.withOpacity(0.12),
                       blurRadius: 24,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ]
                 : [
                     BoxShadow(
                       color: AppTheme.shadowAmbient,
                       blurRadius: 20,
                       offset: Offset.zero,
-                    )
+                    ),
                   ],
           ),
           child: Column(
@@ -637,8 +736,8 @@ class _GameCardState extends State<_GameCard> {
                   enabled
                       ? widget.game['description']
                       : widget.isHost
-                          ? 'Waiting for partner...'
-                          : 'Host is deciding...',
+                      ? 'Waiting for ${widget.guestName}...'
+                      : '${widget.hostName} is deciding...',
                   textAlign: TextAlign.center,
                   style: AppTheme.body(11).copyWith(
                     color: enabled

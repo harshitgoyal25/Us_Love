@@ -39,12 +39,24 @@ public class GameSocketController {
         switch (event.getType()) {
 
             case "PARTNER_JOINED": {
+                if (payload != null && payload.get("userId") instanceof String) {
+                    roomService.syncParticipantName(roomId, (String) payload.get("userId"));
+                }
                 messaging.convertAndSend("/topic/room/" + roomId,
-                    Map.of("type", "PARTNER_JOINED"));
+                    Map.of(
+                        "type", "PARTNER_JOINED",
+                        "hostName", roomService.getHostName(roomId),
+                        "guestName", roomService.getGuestName(roomId)
+                    ));
                 break;
             }
 
             case "LOBBY_SYNC": {
+                messaging.convertAndSend("/topic/room/" + roomId,
+                    Map.of(
+                        "type", "GAME_STATE_UPDATE",
+                        "payload", payload != null ? payload : Map.of("action", "LOBBY_SYNC")
+                    ));
                 break;
             }
 
@@ -72,7 +84,9 @@ public class GameSocketController {
                                 Map.of(
                                     "type", "ROOM_UPDATE",
                                     "hostId", currentHostId,
-                                    "code", updatedRoom.get("code")
+                                    "code", updatedRoom.get("code"),
+                                    "hostName", updatedRoom.getOrDefault("hostName", "Player"),
+                                    "guestName", updatedRoom.getOrDefault("guestName", "")
                                 ));
                         }
                     }
@@ -80,6 +94,15 @@ public class GameSocketController {
                 // Also broadcast the full state update for game compatibility
                 messaging.convertAndSend("/topic/room/" + roomId,
                     Map.of("type", "GAME_STATE_UPDATE", "payload", event.getPayload()));
+                break;
+            }
+
+            case "BACK_TO_LOBBY": {
+                messaging.convertAndSend("/topic/room/" + roomId,
+                    Map.of(
+                        "type", "GAME_STATE_UPDATE",
+                        "payload", Map.of("action", "BACK_TO_LOBBY")
+                    ));
                 break;
             }
 

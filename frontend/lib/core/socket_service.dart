@@ -24,7 +24,6 @@ class SocketService {
         heartbeatOutgoing: const Duration(seconds: 10),
         heartbeatIncoming: const Duration(seconds: 10),
         onConnect: (frame) {
-          onConnected();
           _client!.subscribe(
             destination: '/topic/room/$roomId',
             callback: (frame) {
@@ -33,6 +32,7 @@ class SocketService {
               }
             },
           );
+          onConnected();
         },
         onDisconnect: (frame) {
           print('Disconnected');
@@ -40,7 +40,9 @@ class SocketService {
         },
         onStompError: (frame) {
           print('STOMP error: ${frame.body}');
-          ErrorService.instance.showError(AppError.server('Game synchronization error.'));
+          ErrorService.instance.showError(
+            AppError.server('Game synchronization error.'),
+          );
         },
         onWebSocketError: (error) {
           print('WS error: $error');
@@ -52,10 +54,7 @@ class SocketService {
   }
 
   void sendEvent(String roomId, Map<String, dynamic> event) {
-    _client?.send(
-      destination: '/app/room/$roomId',
-      body: _toJson(event),
-    );
+    _client?.send(destination: '/app/room/$roomId', body: _toJson(event));
   }
 
   void disconnect() {

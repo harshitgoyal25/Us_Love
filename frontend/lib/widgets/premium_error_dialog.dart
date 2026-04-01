@@ -44,6 +44,9 @@ class _PremiumErrorDialogState extends State<PremiumErrorDialog>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = (screenWidth - 32).clamp(260.0, 340.0);
+
     return Material(
       color: Colors.transparent,
       child: Stack(
@@ -53,9 +56,7 @@ class _PremiumErrorDialogState extends State<PremiumErrorDialog>
             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
             child: GestureDetector(
               onTap: widget.onDismiss,
-              child: Container(
-                color: Colors.black.withOpacity(0.4),
-              ),
+              child: Container(color: Colors.black.withOpacity(0.4)),
             ),
           ),
           Center(
@@ -63,87 +64,108 @@ class _PremiumErrorDialogState extends State<PremiumErrorDialog>
               scale: _scale,
               child: FadeTransition(
                 opacity: _opacity,
-                child: Container(
-                  width: 340,
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: AppTheme.bg2.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: AppTheme.rose.withOpacity(0.1),
-                      width: 1.5,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: dialogWidth),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 40,
-                        offset: const Offset(0, 20),
-                      ),
-                      BoxShadow(
-                        color: AppTheme.rose.withOpacity(0.05),
-                        blurRadius: 20,
-                        spreadRadius: -5,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildIcon(),
-                      const SizedBox(height: 24),
-                      Text(
-                        widget.error.title,
-                        style: AppTheme.display(24).copyWith(
-                          color: AppTheme.rose,
-                          letterSpacing: -0.5,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppTheme.bg2.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: AppTheme.rose.withOpacity(0.1),
+                          width: 1.5,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        widget.error.message,
-                        style: AppTheme.body(15, color: AppTheme.textSecondary),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (widget.error.technicalDetails != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 40,
+                            offset: const Offset(0, 20),
                           ),
-                          child: Text(
-                            widget.error.technicalDetails.toString(),
-                            style: GoogleFonts.firaCode(
-                              fontSize: 10,
-                              color: AppTheme.textSecondary.withOpacity(0.5),
+                          BoxShadow(
+                            color: AppTheme.rose.withOpacity(0.05),
+                            blurRadius: 20,
+                            spreadRadius: -5,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildIcon(),
+                          const SizedBox(height: 24),
+                          Text(
+                            widget.error.title,
+                            style: AppTheme.display(24).copyWith(
+                              color: AppTheme.rose,
+                              letterSpacing: -0.5,
                             ),
-                            textAlign: TextAlign.left,
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 32),
-                      AppTheme.roseButton(
-                        label: widget.error.onRetry != null ? 'Try Again' : 'Dismiss',
-                        onTap: () {
-                          if (widget.error.onRetry != null) {
-                            widget.error.onRetry!();
-                          }
-                          widget.onDismiss();
-                        },
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.error.message,
+                            style: AppTheme.body(
+                              15,
+                              color: AppTheme.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (widget.error.technicalDetails != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                widget.error.technicalDetails.toString(),
+                                style: GoogleFonts.firaCode(
+                                  fontSize: 10,
+                                  color: AppTheme.textSecondary.withOpacity(
+                                    0.5,
+                                  ),
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 32),
+                          AppTheme.roseButton(
+                            label: widget.error.onRetry != null
+                                ? 'Try Again'
+                                : 'Dismiss',
+                            onTap: () {
+                              if (widget.error.onRetry != null) {
+                                widget.error.onRetry!();
+                              }
+                              widget.onDismiss();
+                            },
+                          ),
+                          if (widget.error.onRetry != null) ...[
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: widget.onDismiss,
+                              child: Text(
+                                'Dismiss',
+                                style: AppTheme.body(
+                                  14,
+                                  color: AppTheme.textSecondary.withOpacity(
+                                    0.6,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      if (widget.error.onRetry != null) ...[
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: widget.onDismiss,
-                          child: Text(
-                            'Dismiss',
-                            style: AppTheme.body(14, color: AppTheme.textSecondary.withOpacity(0.6)),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -175,6 +197,9 @@ class _PremiumErrorDialogState extends State<PremiumErrorDialog>
       case AppErrorType.unknown:
         iconData = Icons.error_outline_rounded;
         break;
+      case AppErrorType.client:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
 
     return Container(
@@ -184,13 +209,7 @@ class _PremiumErrorDialogState extends State<PremiumErrorDialog>
         color: AppTheme.rose.withOpacity(0.1),
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: Icon(
-          iconData,
-          color: AppTheme.rose,
-          size: 40,
-        ),
-      ),
+      child: Center(child: Icon(iconData, color: AppTheme.rose, size: 40)),
     );
   }
 }

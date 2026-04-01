@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen>
     _fadeCtrl.forward();
 
     if (widget.initialCode != null) {
-      codeCtrl.text = widget.initialCode!;
+      codeCtrl.text = widget.initialCode!.toUpperCase();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         joinRoom();
       });
@@ -98,13 +99,15 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(width: 10),
             Text(
               msg,
-              style: GoogleFonts.inter(color: AppTheme.textPrimary, fontSize: 13),
+              style: GoogleFonts.inter(
+                color: AppTheme.textPrimary,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(24),
       ),
     );
@@ -115,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen>
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -128,116 +132,153 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       drawer: const AppDrawer(),
       body: FloatingHeartsBackground(
-        child: FadeTransition(
-          opacity: _fade,
-          child: SlideTransition(
-            position: _slide,
-            child: Center(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // ── Brand ──
-                    BrandHeader(
-                      tagline: auth.name != null
-                          ? 'Welcome back, ${auth.name} 💕'
-                          : 'Play together. Love together.',
-                    ),
-                    const SizedBox(height: 48),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxHeight < 780;
 
-                    // ── Main card ──
-                    Container(
-                      width: 480,
-                      padding: const EdgeInsets.all(36),
-                      decoration: BoxDecoration(
-                        color: AppTheme.bg3,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: AppTheme.rose.withOpacity(0.06),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.rose.withOpacity(0.04),
-                            blurRadius: 60,
-                            spreadRadius: 10,
-                          ),
-                          BoxShadow(
-                            color: AppTheme.shadowAmbient,
-                            blurRadius: 40,
-                            offset: Offset.zero,
-                          ),
-                        ],
+              return FadeTransition(
+                opacity: _fade,
+                child: SlideTransition(
+                  position: _slide,
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: compact ? 16 : 28,
                       ),
-                      child: Column(
-                        children: [
-                          // ── Create section ──
-                          _SectionHeader(
-                            icon: Icons.add_circle_outline_rounded,
-                            title: 'Create a Room',
-                            subtitle: 'Share the code with your partner',
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth - 48,
                           ),
-                          const SizedBox(height: 16),
-                          AppTheme.roseButton(
-                            label: '+ Create Room',
-                            isLoading: isLoading,
-                            onTap: isLoading ? null : createRoom,
-                          ),
-
-                          const SizedBox(height: 36),
-
-                          // ── Divider ──
-                          _OrDivider(),
-
-                          const SizedBox(height: 36),
-
-                          // ── Join section ──
-                          _SectionHeader(
-                            icon: Icons.login_rounded,
-                            title: 'Join a Room',
-                            subtitle: 'Enter the code your partner sent you',
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: codeCtrl,
-                            textCapitalization: TextCapitalization.characters,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: 10,
-                            ),
-                            decoration: AppTheme.inputDeco(
-                              'ABCD12',
-                              Icons.vpn_key_rounded,
-                            ).copyWith(
-                              hintStyle: GoogleFonts.spaceGrotesk(
-                                color: AppTheme.textSecondary.withOpacity(0.4),
-                                fontSize: 26,
-                                letterSpacing: 10,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              BrandHeader(
+                                tagline: auth.name != null
+                                    ? 'Welcome back, ${auth.name} 💕'
+                                    : 'Play together. Love together.',
                               ),
-                            ),
+                              SizedBox(height: compact ? 24 : 48),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 480,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(36),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.bg3,
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: AppTheme.rose.withOpacity(0.06),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.rose.withOpacity(0.04),
+                                        blurRadius: 60,
+                                        spreadRadius: 10,
+                                      ),
+                                      BoxShadow(
+                                        color: AppTheme.shadowAmbient,
+                                        blurRadius: 40,
+                                        offset: Offset.zero,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      _SectionHeader(
+                                        icon: Icons.add_circle_outline_rounded,
+                                        title: 'Create a Room',
+                                        subtitle:
+                                            'Share the code with your partner',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      AppTheme.roseButton(
+                                        label: '+ Create Room',
+                                        isLoading: isLoading,
+                                        onTap: isLoading ? null : createRoom,
+                                      ),
+                                      SizedBox(height: compact ? 24 : 36),
+                                      _OrDivider(),
+                                      SizedBox(height: compact ? 24 : 36),
+                                      _SectionHeader(
+                                        icon: Icons.login_rounded,
+                                        title: 'Join a Room',
+                                        subtitle:
+                                            'Enter the code your partner sent you',
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextField(
+                                        controller: codeCtrl,
+                                        textCapitalization:
+                                            TextCapitalization.characters,
+                                        inputFormatters: [
+                                          UpperCaseTextFormatter(),
+                                        ],
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.spaceGrotesk(
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textPrimary,
+                                          letterSpacing: 10,
+                                        ),
+                                        decoration:
+                                            AppTheme.inputDeco(
+                                              'ABCD12',
+                                              Icons.vpn_key_rounded,
+                                            ).copyWith(
+                                              hintStyle:
+                                                  GoogleFonts.spaceGrotesk(
+                                                    color: AppTheme
+                                                        .textSecondary
+                                                        .withOpacity(0.4),
+                                                    fontSize: 26,
+                                                    letterSpacing: 10,
+                                                  ),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      AppTheme.roseButton(
+                                        label: 'Join Room →',
+                                        isLoading: false,
+                                        onTap: isLoading ? null : joinRoom,
+                                        outlined: true,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          AppTheme.roseButton(
-                            label: 'Join Room →',
-                            isLoading: false,
-                            onTap: isLoading ? null : joinRoom,
-                            outlined: true,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+      composing: newValue.composing,
     );
   }
 }
@@ -247,9 +288,7 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Container(height: 1, color: AppTheme.bg2),
-        ),
+        Expanded(child: Container(height: 1, color: AppTheme.bg2)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -260,9 +299,7 @@ class _OrDivider extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
-          child: Container(height: 1, color: AppTheme.bg2),
-        ),
+        Expanded(child: Container(height: 1, color: AppTheme.bg2)),
       ],
     );
   }
@@ -281,6 +318,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 40,
@@ -292,17 +330,18 @@ class _SectionHeader extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 18),
         ),
         const SizedBox(width: 14),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppTheme.label(15)
-                  .copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 2),
-            Text(subtitle, style: AppTheme.body(12)),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTheme.label(15).copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 2),
+              Text(subtitle, style: AppTheme.body(12)),
+            ],
+          ),
         ),
       ],
     );

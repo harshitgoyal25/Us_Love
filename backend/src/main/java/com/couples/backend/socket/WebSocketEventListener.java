@@ -41,7 +41,9 @@ public class WebSocketEventListener {
                     Map.of(
                         "type", "ROOM_UPDATE",
                         "hostId", updatedRoom.get("hostId"),
-                        "code", updatedRoom.get("code")
+                        "code", updatedRoom.get("code"),
+                        "hostName", updatedRoom.getOrDefault("hostName", "Player"),
+                        "guestName", updatedRoom.getOrDefault("guestName", "")
                     ));
             }
         }

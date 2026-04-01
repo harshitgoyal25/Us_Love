@@ -3,6 +3,7 @@ package com.couples.backend.service;
 import com.couples.backend.dto.RoomResponse;
 import com.couples.backend.model.Couple;
 import com.couples.backend.repository.CoupleRepository;
+import com.couples.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -12,12 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RoomService {
 
     private final CoupleRepository coupleRepository;
+    private final UserRepository userRepository;
     private final Map<String, Map<String, String>> rooms = new ConcurrentHashMap<>();
     private final Map<String, String> codeToRoom = new ConcurrentHashMap<>();
     private final Map<String, String[]> sessionTracker = new ConcurrentHashMap<>(); // sessionId -> [roomId, userId]
 
-    public RoomService(CoupleRepository coupleRepository) {
+    public RoomService(CoupleRepository coupleRepository, UserRepository userRepository) {
         this.coupleRepository = coupleRepository;
+        this.userRepository = userRepository;
     }
 
     public RoomResponse createRoom(String userId) {
@@ -25,11 +28,12 @@ public class RoomService {
         String code = generateCode();
         Map<String, String> room = new HashMap<>();
         room.put("hostId", userId);
+        room.put("hostName", findUserName(userId));
         room.put("code", code);
         room.put("game", "");
         rooms.put(roomId, room);
         codeToRoom.put(code, roomId);
-        return new RoomResponse(roomId, code, "HOST");
+        return new RoomResponse(roomId, code, "HOST", room.get("hostName"), room.get("guestName"));
     }
 
     public RoomResponse joinRoom(String code, String userId) {
@@ -37,6 +41,7 @@ public class RoomService {
         if (roomId == null) throw new RuntimeException("Room not found");
         Map<String, String> room = rooms.get(roomId);
         room.put("guestId", userId);
+        room.put("guestName", findUserName(userId));
 
         // Persist couple link to Supabase
         String hostId = room.get("hostId");
@@ -47,7 +52,7 @@ public class RoomService {
         Couple saved = coupleRepository.save(couple);
         room.put("coupleId", saved.getId().toString());
 
-        return new RoomResponse(roomId, code, "GUEST");
+        return new RoomResponse(roomId, code, "GUEST", room.get("hostName"), room.get("guestName"));
     }
 
     public void setGame(String roomId, String game) {
@@ -73,7 +78,9 @@ public class RoomService {
             // Host left, promote guest to host if present
             if (guestId != null) {
                 room.put("hostId", guestId);
+                room.put("hostName", room.get("guestName"));
                 room.remove("guestId");
+                room.remove("guestName");
             } else {
                 rooms.remove(roomId);
                 codeToRoom.remove(room.get("code"));
@@ -81,6 +88,7 @@ public class RoomService {
             }
         } else if (userId != null && guestId != null && userId.trim().equalsIgnoreCase(guestId.trim())) {
             room.remove("guestId");
+            room.remove("guestName");
         }
 
         // Reset state so a new partner can join and a new session can start
@@ -92,8 +100,52 @@ public class RoomService {
         sessionTracker.put(sessionId, new String[]{roomId, userId});
     }
 
+    public void syncParticipantName(String roomId, String userId) {
+        Map<String, String> room = rooms.get(roomId);
+        if (room == null || userId == null) {
+            return;
+        }
+
+        String hostId = room.get("hostId");
+        String guestId = room.get("guestId");
+        if (hostId != null && hostId.equalsIgnoreCase(userId)) {
+            room.put("hostName", findUserName(userId));
+            return;
+        }
+        if (guestId != null && guestId.equalsIgnoreCase(userId)) {
+            room.put("guestName", findUserName(userId));
+        }
+    }
+
+    public String getHostName(String roomId) {
+        Map<String, String> room = rooms.get(roomId);
+        if (room == null) {
+            return "Player";
+        }
+        return room.getOrDefault("hostName", "Player");
+    }
+
+    public String getGuestName(String roomId) {
+        Map<String, String> room = rooms.get(roomId);
+        if (room == null) {
+            return "";
+        }
+        return room.getOrDefault("guestName", "");
+    }
+
     public String[] untrackSession(String sessionId) {
         return sessionTracker.remove(sessionId);
+    }
+
+    private String findUserName(String userId) {
+        try {
+            UUID id = UUID.fromString(userId);
+            return userRepository.findById(id)
+                    .map(user -> user.getName() != null && !user.getName().isBlank() ? user.getName().trim() : "Player")
+                    .orElse("Player");
+        } catch (Exception ignored) {
+            return "Player";
+        }
     }
 
     private String generateCode() {

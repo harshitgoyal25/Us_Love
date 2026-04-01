@@ -51,151 +51,165 @@ class _RegisterScreenState extends State<RegisterScreen>
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: FloatingHeartsBackground(
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: SlideTransition(
-              position: _slide,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // ── Brand ──
-                    BrandHeader(tagline: 'Begin your love story 💕'),
-                    const SizedBox(height: 44),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxHeight < 800;
 
-                    // ── Card ──
-                    VelvetCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Create Account', style: AppTheme.display(26)),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Join and play with your partner',
-                            style: AppTheme.body(13),
+              return Center(
+                child: FadeTransition(
+                  opacity: _fade,
+                  child: SlideTransition(
+                    position: _slide,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: compact ? 16 : 32,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth - 48,
                           ),
-                          const SizedBox(height: 32),
-
-                          // Name
-                          FieldLabel('Your Name'),
-                          TextField(
-                            controller: nameCtrl,
-                            style: GoogleFonts.inter(
-                              color: AppTheme.textPrimary,
-                              fontSize: 14,
-                            ),
-                            decoration: AppTheme.inputDeco(
-                              'e.g. Harsh',
-                              Icons.person_outline,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Email
-                          FieldLabel('Email'),
-                          TextField(
-                            controller: emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            style: GoogleFonts.inter(
-                              color: AppTheme.textPrimary,
-                              fontSize: 14,
-                            ),
-                            decoration: AppTheme.inputDeco(
-                              'you@example.com',
-                              Icons.email_outlined,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password
-                          FieldLabel('Password'),
-                          TextField(
-                            controller: passCtrl,
-                            obscureText: _obscurePass,
-                            style: GoogleFonts.inter(
-                              color: AppTheme.textPrimary,
-                              fontSize: 14,
-                            ),
-                            decoration: AppTheme.inputDeco(
-                              '••••••••',
-                              Icons.lock_outline,
-                            ).copyWith(
-                              suffixIcon: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _obscurePass = !_obscurePass),
-                                child: Icon(
-                                  _obscurePass
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color:
-                                      AppTheme.textSecondary.withOpacity(0.7),
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Error
-                          if (auth.error != null) ...[
-                            const SizedBox(height: 12),
-                            ErrorRow(auth.error!),
-                          ],
-                          const SizedBox(height: 28),
-
-                          AppTheme.roseButton(
-                            label: 'Create Account',
-                            isLoading: auth.isLoading,
-                            onTap: () async {
-                              final ok = await auth.register(
-                                nameCtrl.text.trim(),
-                                emailCtrl.text.trim(),
-                                passCtrl.text,
-                              );
-                              if (ok && context.mounted) {
-                                final returnTo = GoRouterState.of(context)
-                                    .uri
-                                    .queryParameters['returnTo'];
-                                if (returnTo != null) {
-                                  context.go(returnTo);
-                                } else {
-                                  context.go('/home');
-                                }
-                              }
-                            },
-                          ),
-
-                          const SizedBox(height: 20),
-                          Center(
-                            child: GestureDetector(
-                              onTap: () => context.go('/login'),
-                              child: RichText(
-                                text: TextSpan(
-                                  text: 'Already have an account? ',
-                                  style: AppTheme.body(13),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              BrandHeader(tagline: 'Begin your love story 💕'),
+                              SizedBox(height: compact ? 24 : 44),
+                              VelvetCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    TextSpan(
-                                      text: 'Sign in',
+                                    Text(
+                                      'Create Account',
+                                      style: AppTheme.display(26),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Join and play with your partner',
+                                      style: AppTheme.body(13),
+                                    ),
+                                    SizedBox(height: compact ? 20 : 32),
+                                    FieldLabel('Your Name'),
+                                    TextField(
+                                      controller: nameCtrl,
                                       style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        color: AppTheme.rose,
-                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 14,
+                                      ),
+                                      decoration: AppTheme.inputDeco(
+                                        'e.g. Harsh',
+                                        Icons.person_outline,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    FieldLabel('Email'),
+                                    TextField(
+                                      controller: emailCtrl,
+                                      keyboardType: TextInputType.emailAddress,
+                                      style: GoogleFonts.inter(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 14,
+                                      ),
+                                      decoration: AppTheme.inputDeco(
+                                        'you@example.com',
+                                        Icons.email_outlined,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    FieldLabel('Password'),
+                                    TextField(
+                                      controller: passCtrl,
+                                      obscureText: _obscurePass,
+                                      style: GoogleFonts.inter(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 14,
+                                      ),
+                                      decoration:
+                                          AppTheme.inputDeco(
+                                            '••••••••',
+                                            Icons.lock_outline,
+                                          ).copyWith(
+                                            suffixIcon: GestureDetector(
+                                              onTap: () => setState(
+                                                () => _obscurePass =
+                                                    !_obscurePass,
+                                              ),
+                                              child: Icon(
+                                                _obscurePass
+                                                    ? Icons.visibility_outlined
+                                                    : Icons
+                                                          .visibility_off_outlined,
+                                                color: AppTheme.textSecondary
+                                                    .withOpacity(0.7),
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                    ),
+                                    if (auth.error != null) ...[
+                                      const SizedBox(height: 12),
+                                      ErrorRow(auth.error!),
+                                    ],
+                                    SizedBox(height: compact ? 20 : 28),
+                                    AppTheme.roseButton(
+                                      label: 'Create Account',
+                                      isLoading: auth.isLoading,
+                                      onTap: () async {
+                                        final ok = await auth.register(
+                                          nameCtrl.text.trim(),
+                                          emailCtrl.text.trim(),
+                                          passCtrl.text,
+                                        );
+                                        if (ok && context.mounted) {
+                                          final returnTo = GoRouterState.of(
+                                            context,
+                                          ).uri.queryParameters['returnTo'];
+                                          if (returnTo != null) {
+                                            context.go(returnTo);
+                                          } else {
+                                            context.go('/home');
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Center(
+                                      child: GestureDetector(
+                                        onTap: () => context.go('/login'),
+                                        child: RichText(
+                                          text: TextSpan(
+                                            text: 'Already have an account? ',
+                                            style: AppTheme.body(13),
+                                            children: [
+                                              TextSpan(
+                                                text: 'Sign in',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: AppTheme.rose,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
